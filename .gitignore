@@ -1,0 +1,38 @@
+# Godot 4
+.godot/
+.import/
+
+# Exports / builds
+build/
+export/
+*.pck
+*.exe
+*.x86_64
+*.app
+*.dmg
+
+# C# / .NET
+bin/
+obj/
+*.user
+*.suo
+*.pdb
+
+# IDE
+.vs/
+.idea/
+.vscode/
+*.swp
+*~
+
+# OS
+Thumbs.db
+.DS_Store
+ehthumbs.db
+
+# Secrets
+.env
+.env.local
+*.pem
+*.key
+secrets/
