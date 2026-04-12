@@ -10,6 +10,9 @@ reviewer runs in a **separate** session after the PR is green.
 Source of truth for each agent's behavior is its prompt under
 `.claude/agents/`. This doc is the map; the prompts are the territory.
 
+See `.claude/agents/*.md` for the full per-agent instructions that
+govern each role's scope and constraints.
+
 ## Team composition per task type
 
 The session lead picks the team at startup based on the issue's labels
