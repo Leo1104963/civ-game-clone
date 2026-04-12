@@ -11,6 +11,8 @@ public sealed class Unit
 
     public int Id { get; }
     public string UnitType { get; }
+    /// <summary>Alias for UnitType; matches the naming convention used by City.Name.</summary>
+    public string Name => UnitType;
     public HexCoord Position { get; private set; }
     public int MovementRange { get; }
     public int MovementRemaining { get; private set; }
