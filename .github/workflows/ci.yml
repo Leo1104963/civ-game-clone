@@ -50,12 +50,37 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Godot
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Setup Godot
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.4.1
+          use-dotnet: true
+
+      - name: Restore .NET dependencies
+        run: dotnet restore
+
+      - name: Build C# assembly
+        run: dotnet build src/CivGame/CivGame.csproj --configuration Debug --no-restore
+
+      - name: Stage assembly for headless game mode
         run: |
-          wget -q https://github.com/godotengine/godot/releases/download/4.4.1-stable/Godot_v4.4.1-stable_linux.x86_64.zip
-          unzip -q Godot_v4.4.1-stable_linux.x86_64.zip
-          sudo mv Godot_v4.4.1-stable_linux.x86_64 /usr/local/bin/godot
-          chmod +x /usr/local/bin/godot
+          for dir in ExportDebug ExportRelease Release; do
+            mkdir -p ".godot/mono/temp/bin/$dir"
+            cp .godot/mono/temp/bin/Debug/CivGame.dll ".godot/mono/temp/bin/$dir/"
+            cp .godot/mono/temp/bin/Debug/CivGame.pdb ".godot/mono/temp/bin/$dir/" 2>/dev/null || true
+          done
+
+      - name: Verify ScriptPath registration in DLL
+        run: |
+          echo "=== DLL strings containing res:// or ScriptPath ==="
+          strings .godot/mono/temp/bin/Debug/CivGame.dll | grep -E "res://|ScriptPath|MainMenuController" || echo "WARNING: none found"
+          echo "=== Generated source files ==="
+          find . -path '*/.godot/*' -name '*.generated.cs' 2>/dev/null | head -20 || echo "none"
 
       - name: Run game launch verify
         run: bash scripts/game-launch-verify.sh

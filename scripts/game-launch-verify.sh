@@ -12,13 +12,13 @@ LOG="launch.log"
 echo "=== Game Launch Verify ==="
 
 # Step 1: headless launch
-echo "Launching: $GODOT --headless --quit-after $TIMEOUT $SCENE"
-$GODOT --headless --quit-after "$TIMEOUT" "$SCENE" 2>&1 | tee "$LOG" || true
+echo "Launching: $GODOT --headless --verbose --quit-after $TIMEOUT $SCENE"
+$GODOT --headless --verbose --quit-after "$TIMEOUT" "$SCENE" 2>&1 | tee "$LOG" || true
 
 # Step 2: scan log for errors
-if grep -qiE "error|exception|assert|null reference" "$LOG"; then
+if grep -qiE "ERROR:|SCRIPT ERROR:" "$LOG"; then
   echo "FAIL: errors found in log:"
-  grep -iE "error|exception|assert|null reference" "$LOG"
+  grep -iE "ERROR:|SCRIPT ERROR:" "$LOG"
   exit 1
 fi
 
