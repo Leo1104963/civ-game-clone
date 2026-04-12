@@ -64,8 +64,16 @@ jobs:
       - name: Restore .NET dependencies
         run: dotnet restore
 
-      - name: Build C# solution via Godot
-        run: godot --headless --build-solutions --quit-after 2000 || true
+      - name: Build C# assembly
+        run: dotnet build src/CivGame/CivGame.csproj --configuration Debug --no-restore
+
+      - name: Stage assembly for headless game mode
+        run: |
+          for dir in ExportDebug ExportRelease Release; do
+            mkdir -p ".godot/mono/temp/bin/$dir"
+            cp .godot/mono/temp/bin/Debug/CivGame.dll ".godot/mono/temp/bin/$dir/"
+            cp .godot/mono/temp/bin/Debug/CivGame.pdb ".godot/mono/temp/bin/$dir/" 2>/dev/null || true
+          done
 
       - name: Run game launch verify
         run: bash scripts/game-launch-verify.sh
