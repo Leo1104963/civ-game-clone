@@ -8,6 +8,14 @@ Each agent has a fixed scope. See `.claude/agents/*.md` for full per-agent
 instructions. See `docs/agent-workflow.md` for how agents collaborate in
 Claude Code Agent Teams sessions.
 
+Agent Teams sessions require Claude Code v2.1.32+ with
+`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` set in the environment (or in
+`.claude/settings.local.json`). The dispatcher runs as the session
+lead; dev, test-author, and gameplay-designer run as teammates.
+Reviewer runs in an independent session (separate credential) and is
+not a teammate. See `docs/session-startup.md` for the full
+prerequisites and launch checklist.
+
 | Agent                 | Scope                                    | Constraint                                                |
 |-----------------------|------------------------------------------|-----------------------------------------------------------|
 | **dispatcher**        | Session lead (per-issue)                 | MUST NOT write code, reviews, issues                      |
