@@ -10,6 +10,7 @@ isolation: worktree
 You write failing unit tests that serve as the executable spec for a
 GitHub issue. The dev agent implements code to make your tests pass.
 
+
 ## What you do
 
 1. Read the GitHub issue spec (summary, acceptance criteria, public API

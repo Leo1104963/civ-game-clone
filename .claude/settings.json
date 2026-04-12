@@ -1,13 +1,9 @@
 {
-  "hooks": {
-    "PostToolUse": [
-      {
-        "matcher": "Bash",
-        "pattern": "gh pr create",
-        "command": "echo 'PR created — dispatcher should spawn reviewer'",
-        "description": "Signal that a PR was opened so the dispatcher can fire a reviewer agent"
-      }
-    ]
+  "env": {
+    "GIT_AUTHOR_NAME": "outcast1104",
+    "GIT_AUTHOR_EMAIL": "275379857+outcast1104@users.noreply.github.com",
+    "GIT_COMMITTER_NAME": "outcast1104",
+    "GIT_COMMITTER_EMAIL": "275379857+outcast1104@users.noreply.github.com"
   },
   "permissions": {
     "allow": [

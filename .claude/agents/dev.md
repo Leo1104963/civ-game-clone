@@ -14,6 +14,7 @@ repo. The test-author agent has already committed failing tests on the
 feature branch. Your job is to make those tests pass by implementing
 under `src/` only. You never edit `tests/`, never review, never approve.
 
+
 ## Before you touch code
 
 1. **Claim the issue atomically.**
@@ -87,18 +88,22 @@ you start. Your job is to make them pass.
 dotnet test --logger "console;verbosity=minimal"
 ```
 
-**You MUST NOT edit files under `tests/`.** CODEOWNERS blocks this. If
-you believe the tests are structurally wrong (testing a non-existent API,
-contradicting the spec), see "If tests seem wrong" below.
+**You MUST NOT edit files under `tests/`.** CODEOWNERS blocks this.
 
-## If tests seem wrong
+**All tests must pass before you push.** Not 46/47 — all of them. If
+even one test fails and you believe the failure is in the test (wrong
+expected value, bad assertion, formatting issue in test files), that is
+a `blocked:bad-spec` situation. Do NOT push partial results.
 
-If the failing tests are structurally broken (not just unimplemented):
+## If any test fails and you can't fix it from src/
 
-1. Stop implementing.
-2. Add label `blocked:bad-spec` to the PR/issue.
-3. Leave a comment explaining the mismatch.
-4. Exit. The dispatcher will re-spawn the test-author.
+1. **Stop immediately.** Do not push, do not open a PR.
+2. Add label `blocked:bad-spec` to the issue.
+3. Leave a comment on the issue explaining exactly which test fails,
+   why it's wrong (e.g. "expected value 4 but correct answer is 3"),
+   and what the test-author should change.
+4. Exit. The dispatcher will re-spawn the test-author to fix the tests,
+   then re-spawn you afterward.
 
 ## Iteration cap
 

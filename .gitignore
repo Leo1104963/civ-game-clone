@@ -40,3 +40,4 @@ ehthumbs.db
 *.pem
 *.key
 secrets/
+.claude/settings.local.json

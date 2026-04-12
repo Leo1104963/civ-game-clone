@@ -46,6 +46,16 @@ dotnet format
 - All PRs target `main` and require: CI green + 1 approving review from
   `@Leo1104963` (CODEOWNERS).
 
+## Bot identity
+
+All agents operate as `outcast1104` automatically. Git identity and
+`GH_TOKEN` are set via environment variables in `.claude/settings.json`
+and `.claude/settings.local.json` — no manual setup needed per agent.
+
+The reviewer agent additionally has access to the `Leo1104963` approval
+credential via its MCP server. All other GitHub operations (commits,
+pushes, PRs, issues) use the `outcast1104` bot identity.
+
 ## Git workflow
 
 - One feature branch per issue: `feat/<issue-number>-<short-name>`

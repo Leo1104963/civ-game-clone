@@ -134,18 +134,27 @@ While agents are running, poll at ~2-minute intervals:
    new commits? Flag as potentially stuck.
 3. **Stale worktree cleanup** — if an agent exited without cleaning up,
    remove the orphan worktree.
-4. **Review fan-out** — as soon as a PR is opened and CI starts, spawn
-   the reviewer (don't wait for CI green).
-5. **Escalation** — surface `status:stuck` and `blocked:bad-spec` issues
-   to the human via a summary comment.
+4. **Review fan-out** — as soon as a PR is opened and CI is **fully
+   green** (all 4 checks: build, unit-tests, game-launch-verify, lint),
+   spawn the reviewer. Do NOT spawn reviewer before CI is green.
+5. **Escalation** — surface `status:stuck` issues to the human.
 
-### 6. Circuit breaker handling
+### 6. Circuit breaker handling (`blocked:bad-spec`)
 
-- If a dev agent adds `blocked:bad-spec`, re-spawn test-author to revise
-  the test suite on the same branch.
-- If the bad-spec → test-author → dev cycle repeats **twice** for the
-  same issue, stop and escalate to the human.
-- If a dev agent adds `status:stuck`, do NOT re-spawn. Escalate.
+When the dispatcher detects the `blocked:bad-spec` label on an issue:
+
+1. Read the dev agent's comment to understand which test is wrong and
+   why.
+2. Fire a test-author agent (general-purpose with test-author
+   instructions) on the same branch to fix the specific test defect.
+   Pass the dev's diagnosis in the prompt so the test-author knows
+   exactly what to change.
+3. After test-author pushes the fix, remove the `blocked:bad-spec`
+   label and re-fire the dev agent.
+4. If the bad-spec → test-author → dev cycle repeats **twice** for the
+   same issue, stop and escalate to the human.
+5. If a dev agent adds `status:stuck` (not `blocked:bad-spec`), do NOT
+   re-spawn. Escalate immediately.
 
 ## Collision avoidance rules
 

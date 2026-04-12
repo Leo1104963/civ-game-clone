@@ -3,6 +3,8 @@ name: ci
 on:
   pull_request:
     branches: [main]
+  push:
+    branches: [main]
 
 jobs:
   build:
@@ -71,3 +73,23 @@ jobs:
 
       - name: Check formatting
         run: dotnet format --verify-no-changes
+
+  notify-failure:
+    name: notify-failure
+    runs-on: ubuntu-latest
+    needs: [build, unit-tests, game-launch-verify, lint]
+    if: failure() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Open bug issue for main branch failure
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const sha = context.sha.substring(0, 7);
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `[CI regression] main broken at ${sha}`,
+              body: `## CI failure on main\n\nCommit: ${context.sha}\nRun: ${runUrl}\n\nOne or more CI checks failed after merge to main. This needs immediate investigation.\n\n## Next steps\n1. Designer: triage and create a fix story\n2. Dispatcher: prioritize as critical`,
+              labels: ['type:bug', 'priority:critical']
+            });
