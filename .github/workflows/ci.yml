@@ -83,8 +83,16 @@ jobs:
 
       - name: Copy GodotSharp assemblies alongside CivGame.dll
         run: |
-          cp /usr/local/bin/GodotSharp/GodotSharp/4.0/GodotSharp.dll .godot/mono/temp/bin/Debug/
-          cp /usr/local/bin/GodotSharp/GodotSharp/4.0/GodotSharpEditor.dll .godot/mono/temp/bin/Debug/ 2>/dev/null || true
+          GODOTSHARP=$(find /usr/local/bin/GodotSharp -name "GodotSharp.dll" -type f | head -1)
+          if [ -z "$GODOTSHARP" ]; then
+            echo "ERROR: GodotSharp.dll not found under /usr/local/bin/GodotSharp"
+            find /usr/local/bin/GodotSharp -type f | head -20
+            exit 1
+          fi
+          echo "Found: $GODOTSHARP"
+          cp "$GODOTSHARP" .godot/mono/temp/bin/Debug/
+          GODOTSHARP_EDITOR=$(find /usr/local/bin/GodotSharp -name "GodotSharpEditor.dll" -type f | head -1)
+          [ -n "$GODOTSHARP_EDITOR" ] && cp "$GODOTSHARP_EDITOR" .godot/mono/temp/bin/Debug/ || true
 
       - name: Run game launch verify
         run: bash scripts/game-launch-verify.sh
