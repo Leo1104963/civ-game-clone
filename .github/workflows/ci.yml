@@ -78,11 +78,21 @@ jobs:
           if [ -z "$GODOTSHARP" ]; then
             echo "ERROR: GodotSharp.dll not found"; find /usr/local/bin/GodotSharp -type f | head -20; exit 1
           fi
-          echo "Copying from: $(dirname $GODOTSHARP)"
-          cp "$(dirname $GODOTSHARP)"/*.dll .godot/mono/temp/bin/ExportDebug/
+          API_DEBUG="$(dirname $GODOTSHARP)"
+          echo "Copying from: $API_DEBUG"
+          cp "$API_DEBUG"/*.dll .godot/mono/temp/bin/ExportDebug/
+          # Ensure GodotPlugins.dll is also available in Api/ExportDebug/ for Godot's internal host lookup
+          sudo mkdir -p /usr/local/bin/GodotSharp/Api/ExportDebug
+          sudo cp "$API_DEBUG"/*.dll /usr/local/bin/GodotSharp/Api/ExportDebug/
 
-      - name: Diagnostic — list .godot/mono/temp/bin/
-        run: find .godot/mono/temp/bin/ -type f | sort
+      - name: Diagnostic — GodotSharp installation structure
+        run: |
+          echo "=== GodotSharp dirs ==="
+          find /usr/local/bin/GodotSharp -type d | sort
+          echo "=== GodotPlugins.dll locations ==="
+          find /usr/local/bin/GodotSharp -name "GodotPlugins.dll" | sort
+          echo "=== Project bin dir ==="
+          find .godot/mono/temp/bin/ -type f | sort
 
       - name: Run game launch verify
         env:
