@@ -1,7 +1,7 @@
 namespace CivGame;
 
 /// <summary>
-/// Placeholder — replaced by real game classes as issues are implemented.
+/// Basic metadata about the game project.
 /// </summary>
 public static class GameInfo
 {
