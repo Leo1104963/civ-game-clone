@@ -1,7 +1,7 @@
 ---
 name: reviewer
 description: Independent code review against the issue spec. Handles exactly ONE PR per session. Uses the gh-review MCP server to post approvals. Never implements.
-model: opus
+model: sonnet
 effort: max
 memory: project
 isolation: worktree
