@@ -81,6 +81,11 @@ jobs:
           dotnet build src/CivGame/CivGame.csproj --configuration Debug \
             -p:OutputPath="$(pwd)/.godot/mono/temp/bin/Debug/"
 
+      - name: Copy GodotSharp assemblies alongside CivGame.dll
+        run: |
+          cp /usr/local/bin/GodotSharp/GodotSharp/4.0/GodotSharp.dll .godot/mono/temp/bin/Debug/
+          cp /usr/local/bin/GodotSharp/GodotSharp/4.0/GodotSharpEditor.dll .godot/mono/temp/bin/Debug/ 2>/dev/null || true
+
       - name: Run game launch verify
         run: bash scripts/game-launch-verify.sh
 
