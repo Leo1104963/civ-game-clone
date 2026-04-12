@@ -22,10 +22,10 @@ public partial class GameController : Node2D
 
         // Get child nodes
         var gridRenderer = GetNode<HexGridRenderer>("HexGridRenderer");
-        var unitRenderer = GetNode<UnitRenderer>("UnitRenderer");
-        var cityRenderer = GetNode<CityRenderer>("CityRenderer");
-        var movementOverlay = GetNode<MovementOverlay>("MovementOverlay");
-        var inputHandler = GetNode<InputHandler>("InputHandler");
+        var unitRenderer = GetNode<UnitRendererNode>("UnitRenderer");
+        var cityRenderer = GetNode<CityRendererNode>("CityRenderer");
+        var movementOverlay = GetNode<MovementOverlayNode>("MovementOverlay");
+        var inputHandler = GetNode<InputHandlerNode>("InputHandler");
         var turnHud = GetNode<TurnHud>("CanvasLayer/TurnHud");
         var cityInfoPanel = GetNode<CityInfoPanel>("CanvasLayer/CityInfoPanel");
 
