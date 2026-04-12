@@ -11,6 +11,10 @@ LOG="launch.log"
 
 echo "=== Game Launch Verify ==="
 
+# Step 0: build C# assembly so Godot mono can find script classes
+echo "Building C# solution..."
+dotnet build src/CivGame/CivGame.csproj --configuration Debug --nologo -v quiet
+
 # Step 1: headless launch
 echo "Launching: $GODOT --headless --quit-after $TIMEOUT $SCENE"
 $GODOT --headless --quit-after "$TIMEOUT" "$SCENE" 2>&1 | tee "$LOG" || true
