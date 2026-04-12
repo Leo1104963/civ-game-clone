@@ -63,6 +63,9 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
+      - name: Build C# solution
+        run: dotnet build --configuration Release
+
       - name: Import Godot project
         run: godot --headless --import || true
 
