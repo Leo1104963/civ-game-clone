@@ -1,7 +1,7 @@
 ---
 name: dev
 description: Implements exactly one GitHub issue per session. Runs Game Launch Verify, opens a PR, and triggers auto-merge. Uses the bot GitHub identity.
-model: opus
+model: sonnet
 effort: high
 memory: project
 isolation: worktree
