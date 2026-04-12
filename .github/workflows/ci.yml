@@ -66,37 +66,10 @@ jobs:
       - name: Restore .NET dependencies
         run: dotnet restore
 
-      - name: Build C# solution (ExportDebug — used by Godot headless without --editor)
-        run: |
-          mkdir -p .godot/mono/temp/bin/ExportDebug
-          dotnet build src/CivGame/CivGame.csproj --configuration ExportDebug \
-            -p:OutputPath="$(pwd)/.godot/mono/temp/bin/ExportDebug/"
-
-      - name: Copy GodotSharp assemblies alongside CivGame.dll
-        run: |
-          GODOTSHARP=$(find /usr/local/bin/GodotSharp -name "GodotSharp.dll" -type f | head -1)
-          if [ -z "$GODOTSHARP" ]; then
-            echo "ERROR: GodotSharp.dll not found"; find /usr/local/bin/GodotSharp -type f | head -20; exit 1
-          fi
-          API_DEBUG="$(dirname $GODOTSHARP)"
-          echo "Copying from: $API_DEBUG"
-          cp "$API_DEBUG"/*.dll .godot/mono/temp/bin/ExportDebug/
-          # Ensure GodotPlugins.dll is also available in Api/ExportDebug/ for Godot's internal host lookup
-          sudo mkdir -p /usr/local/bin/GodotSharp/Api/ExportDebug
-          sudo cp "$API_DEBUG"/*.dll /usr/local/bin/GodotSharp/Api/ExportDebug/
-
-      - name: Diagnostic — GodotSharp installation structure
-        run: |
-          echo "=== GodotSharp dirs ==="
-          find /usr/local/bin/GodotSharp -type d | sort
-          echo "=== GodotPlugins.dll locations ==="
-          find /usr/local/bin/GodotSharp -name "GodotPlugins.dll" | sort
-          echo "=== Project bin dir ==="
-          find .godot/mono/temp/bin/ -type f | sort
+      - name: Build C# solution via Godot (registers assemblies correctly)
+        run: timeout 120 godot --headless --build-solutions --quit-after 2000 || true
 
       - name: Run game launch verify
-        env:
-          TIMEOUT: "30"
         run: bash scripts/game-launch-verify.sh
 
   lint:
