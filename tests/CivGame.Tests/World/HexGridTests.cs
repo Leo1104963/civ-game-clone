@@ -71,7 +71,7 @@ public class HexGridTests
     [InlineData(0, 0, 3, -1, 3)]
     [InlineData(0, 0, 2, -2, 2)]
     [InlineData(1, 1, 4, -2, 3)]
-    [InlineData(-1, 2, 2, -1, 4)]
+    [InlineData(-1, 2, 2, -1, 3)]
     public void Should_ReturnCubeManhattanDistance_When_DistanceToOtherCoord(
         int q1, int r1, int q2, int r2, int expected)
     {
@@ -118,12 +118,12 @@ public class HexGridTests
     // ------------------------------------------------------------------ //
 
     [Theory]
-    [InlineData(0,  1,  0)]   // 0 = East:  q+1, r+0
-    [InlineData(1,  1, -1)]   // 1 = NE:    q+1, r-1
-    [InlineData(2,  0, -1)]   // 2 = NW:    q+0, r-1
-    [InlineData(3, -1,  0)]   // 3 = West:  q-1, r+0
-    [InlineData(4, -1,  1)]   // 4 = SW:    q-1, r+1
-    [InlineData(5,  0,  1)]   // 5 = SE:    q+0, r+1
+    [InlineData(0, 1, 0)]   // 0 = East:  q+1, r+0
+    [InlineData(1, 1, -1)]   // 1 = NE:    q+1, r-1
+    [InlineData(2, 0, -1)]   // 2 = NW:    q+0, r-1
+    [InlineData(3, -1, 0)]   // 3 = West:  q-1, r+0
+    [InlineData(4, -1, 1)]   // 4 = SW:    q-1, r+1
+    [InlineData(5, 0, 1)]   // 5 = SE:    q+0, r+1
     public void Should_ReturnCorrectNeighbor_When_DirectionGiven(int direction, int dq, int dr)
     {
         var origin = new HexCoord(0, 0);
@@ -294,8 +294,8 @@ public class HexGridTests
         var coords = grid.AllCells().Select(c => c.Coord).ToHashSet();
 
         for (int q = 0; q < 3; q++)
-        for (int r = 0; r < 3; r++)
-            Assert.Contains(new HexCoord(q, r), coords);
+            for (int r = 0; r < 3; r++)
+                Assert.Contains(new HexCoord(q, r), coords);
     }
 
     // ------------------------------------------------------------------ //
