@@ -1,0 +1,22 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; but it can also be edited just fine manually if you know what you're doing.
+
+[application]
+
+config/name="CivGame"
+run/main_scene="res://scenes/MainMenu.tscn"
+config/features=PackedStringArray("4.4")
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=720
+
+[dotnet]
+
+project/assembly_name="CivGame"
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
