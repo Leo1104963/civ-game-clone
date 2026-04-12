@@ -63,11 +63,11 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      - name: Import Godot project
-        run: godot --headless --import || true
-
-      - name: Build C# assembly and stage for Godot runtime
+      - name: Build C# assembly
         run: dotnet build --configuration Debug
+
+      - name: Import Godot project
+        run: timeout 60 godot --headless --import || true
 
       - name: Run game launch verify
         run: bash scripts/game-launch-verify.sh
