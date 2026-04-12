@@ -91,10 +91,27 @@ Agent(
 Agent(
   description="Review PR #<PR>",
   subagent_type="reviewer",
-  prompt="Review PR #<PR> in Leo1104963/civ-game-clone. Check: tests match spec, impl is clean, no test files touched by dev. Exactly one PR per session.",
+  prompt="Review PR #<PR> in Leo1104963/civ-game-clone. Check: tests match spec, impl is clean, no test files touched by dev. Post your full review as a PR comment using `gh pr comment`. Report your verdict (APPROVE or CHANGES_REQUESTED) back to the dispatcher. Exactly one PR per session.",
   run_in_background=true
 )
 ```
+
+**Step C.1 — APPROVE (dispatcher action):** when the reviewer reports
+APPROVE, the dispatcher submits the formal approval via the GitHub API
+using Leo's approval token:
+
+```bash
+GH_APPROVAL_TOKEN=$(cat ~/.claude/secrets/gh-approval-token)
+curl -s -X POST \
+  "https://api.github.com/repos/Leo1104963/civ-game-clone/pulls/<PR>/reviews" \
+  -H "Authorization: Bearer $GH_APPROVAL_TOKEN" \
+  -H "Accept: application/vnd.github+json" \
+  -H "X-GitHub-Api-Version: 2022-11-28" \
+  -d '{"event":"APPROVE","body":"Approved based on reviewer agent analysis."}'
+```
+
+If the reviewer reports CHANGES_REQUESTED, do NOT approve. Relay the
+findings to the dev agent for fixes instead.
 
 **Step D — PLAYTEST (optional):** for PRs with game-logic changes.
 
