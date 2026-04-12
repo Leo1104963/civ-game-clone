@@ -66,8 +66,11 @@ jobs:
       - name: Restore .NET dependencies
         run: dotnet restore
 
+      - name: Build C# solution
+        run: dotnet build --configuration Debug
+
       - name: Open project in editor (imports assets + registers C# classes)
-        run: timeout 120 godot --headless --editor --quit-after 2000 || true
+        run: timeout 120 godot --headless --editor --quit-after 30000 || true
 
       - name: Run game launch verify
         run: bash scripts/game-launch-verify.sh
