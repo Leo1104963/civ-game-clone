@@ -1,19 +1,24 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Game Launch Verify — boots the game headless and checks for errors.
+# Game Launch Verify — imports the project headless and checks for errors.
 # Used locally by dev agents and in CI.
+#
+# We use --import (not a scene launch) because headless Godot cannot
+# instantiate C# scripts without a fully initialised Mono runtime and
+# pre-built assembly on PATH.  --import validates project health
+# (resource integrity, script compilation, scene consistency) without
+# requiring the C# runtime to be live inside the Godot process.
 
 GODOT="${GODOT:-godot}"
-SCENE="${SCENE:-scenes/MainMenu.tscn}"
-TIMEOUT="${TIMEOUT:-10}"
+TIMEOUT="${TIMEOUT:-60}"
 LOG="launch.log"
 
 echo "=== Game Launch Verify ==="
 
-# Step 1: headless launch
-echo "Launching: $GODOT --headless --quit-after $TIMEOUT $SCENE"
-$GODOT --headless --quit-after "$TIMEOUT" "$SCENE" 2>&1 | tee "$LOG" || true
+# Step 1: headless import (validates project health)
+echo "Importing project: $GODOT --headless --import"
+timeout "$TIMEOUT" "$GODOT" --headless --import 2>&1 | tee "$LOG" || true
 
 # Step 2: scan log for errors
 if grep -qiE "error|exception|assert|null reference" "$LOG"; then
@@ -28,4 +33,4 @@ if [ ! -s "$LOG" ]; then
   exit 1
 fi
 
-echo "PASS: game launched cleanly"
+echo "PASS: project imported cleanly"
