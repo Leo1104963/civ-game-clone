@@ -78,24 +78,34 @@ PLAN      designer creates GH issue with self-contained spec, track label,
 APPROVE   human thumbs-up the issue
 SPEC      dispatcher fires test-author in a worktree. Test-author reads
           the issue spec, writes failing unit tests under tests/,
-          commits to the feature branch, opens a spec-PR.
-          Tests must compile and fail for the right reason (not typos).
-CLAIM     after spec-PR merges (or is stacked), dispatcher fires a dev
-          agent in a worktree on the same branch; dev adds
-          `claimed-by:dev-<ts>` label
-BUILD     dev implements under src/ until all tests pass, runs local
-          Game Launch Verify, commits, opens PR via `gh pr create`,
-          then `gh pr merge --auto --squash`.
+          commits to the feature branch, opens a PR.
+          Tests reference types that don't exist yet — build will fail.
+          EXCEPTION: `type:task` issues (infrastructure) skip this step
+          and go straight to BUILD.
+BUILD     dispatcher fires dev agent on the SAME branch. Dev adds
+          `claimed-by:dev-<ts>` label. Dev implements under src/ until
+          all tests pass, pushes to the same branch (same PR).
           Dev CANNOT edit files under tests/ (CODEOWNERS enforced).
           If stuck after 5 CI cycles → label `status:stuck`, stop.
 CI        GitHub Actions runs build + unit-tests + game-launch-verify + lint
-REVIEW    dispatcher (or post-PR-open hook) spawns reviewer agent in fresh
-          worktree. Reviewer checks: (a) tests match spec, (b) impl is
-          clean, (c) no test files touched by dev. Calls `pr_approve`
-          or `pr_request_changes` via gh-review-mcp
+REVIEW    dispatcher fires reviewer agent once CI is fully green (all 4
+          checks SUCCESS). Reviewer checks: (a) tests match spec, (b)
+          impl is clean, (c) no test files touched by dev.
+          KNOWN LIMITATION: MCP approval tools don't work in worktrees.
+          Reviewer posts verdict as a PR comment. The main agent relays
+          the formal approval via the GitHub API using the Leo1104963
+          approval token.
 MERGE     GitHub auto-merge fires when every protection rule is satisfied
 PLAYTEST  nightly cron fires playtester agent against `main`; regressions
-          open `type:bug` issues, triaged by designer
+          open `type:bug` issues, triaged by designer (not yet implemented,
+          see issue #16)
+```
+
+### Current status
+
+Check the live state with:
+```bash
+gh issue list --repo Leo1104963/civ-game-clone --state all --json number,title,state,labels
 ```
 
 ### Stuck / bad-spec circuit breaker
@@ -154,9 +164,8 @@ While agents are running, dispatcher polls at ~2-minute intervals:
    no new commits? Flag as potentially stuck.
 3. **Stale worktree cleanup** — if an agent exited without cleaning up,
    dispatcher removes the orphan worktree.
-4. **Review fan-out** — as soon as a PR is opened and CI starts, spawn
-   reviewer (don't wait for CI green; reviewer can read the diff while
-   CI runs in parallel).
+4. **Review fan-out** — spawn reviewer only after CI is **fully green**
+   (all 4 checks SUCCESS). Do NOT spawn before CI passes.
 5. **Escalation** — surface `status:stuck` and `blocked:bad-spec` issues
    to the human via a summary comment on the issue.
 
@@ -234,7 +243,7 @@ field. No other subagent lists `gh-review-mcp`.
 
 ### CI
 
-`.github/workflows/ci.yml` runs on every `pull_request`:
+`.github/workflows/ci.yml` runs on `pull_request` AND `push` to `main`:
 
 ```yaml
 jobs:
@@ -242,9 +251,13 @@ jobs:
   unit-tests:         # dotnet test — C# game logic suite
   game-launch-verify: # boot built binary headless, scan log for errors
   lint:               # dotnet format --verify-no-changes
+  notify-failure:     # on main push failure: auto-creates type:bug issue
 ```
 
-All four are required status checks.
+All four check jobs are required status checks. The `notify-failure` job
+runs only on push to `main` and only when a check fails — it opens a
+`type:bug`, `priority:critical` issue automatically so the designer can
+triage it.
 
 ### Auto-merge wiring
 
@@ -372,40 +385,74 @@ Game/
 
 ---
 
-## Open questions
+## Resolved questions
 
-1. ~~Engine~~ — **RESOLVED: Godot 4 + C#**
-2. ~~Context rotation~~ — **RESOLVED: MCP proxy (Python) + two GitHub
-   identities**
-3. ~~Agent Teams primitive~~ — **EVALUATED, DECLINED.** Claude Code's
-   experimental `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` flag provides
-   peer-to-peer messaging and shared in-session task lists. We use
-   GitHub Issues as the durable task queue instead — survives session
-   crashes, is human-inspectable, and doesn't require experimental
-   feature flags.
-4. **GitHub repo** — name + `gh repo create`
-5. ~~Bot account~~ — **RESOLVED: `outcast1104` created.** Needs 2FA
-   enabled, PAT generated, added as collaborator.
+1. **Engine** — Godot 4 + C#
+2. **Context rotation** — MCP proxy (Python) + two GitHub identities
+3. **Agent Teams primitive** — evaluated, declined. GitHub Issues as
+   durable task queue instead.
+4. **GitHub repo** — `Leo1104963/civ-game-clone`
+5. **Bot account** — `outcast1104`, write collaborator
 
-## Next steps
+## Known limitations
 
-1. ~~Create bot GitHub account~~ — **DONE: `outcast1104`**
-2. Enable 2FA on `outcast1104`, generate PAT with `contents:write` +
-   `pull-requests:write`
-3. `gh repo create`, initial commit, add `outcast1104` as collaborator
-4. Store approval token at `~/.claude/secrets/gh-approval-token`
-5. Build `gh-review-mcp` — Python + FastMCP, three tools
-6. Draft `CLAUDE.md` with engine-specific commands
-7. Draft six agent files. `reviewer.md` declares `gh-review-mcp` in
-   `mcpServers`. `test-author.md` scoped to `tests/` only.
-8. Draft `.github/workflows/ci.yml` — `build`, `unit-tests`,
-   `game-launch-verify`, `lint`
-9. Draft `CODEOWNERS`:
-   - `* @Leo1104963` (catch-all, review required from primary)
-   - `tests/** @Leo1104963` (prevents dev agent from editing tests
-     without approval)
-10. Apply branch protection via `gh api ... /branches/main/protection`
-11. Stub `scripts/game-launch-verify.sh`
-12. Stub `.claude/settings.json` hooks for auto-review-on-PR and
-    auto-dispatch
-13. Create `tests/` directory with initial project structure for C# tests
+1. **MCP approval in worktrees doesn't work.** The reviewer agent's
+   `mcpServers` frontmatter doesn't resolve when running in a worktree
+   via the `Agent` tool. Workaround: reviewer posts verdict as a PR
+   comment, the main agent relays the formal approval via:
+   ```bash
+   GH_TOKEN=$(cat ~/.claude/secrets/gh-approval-token) \
+     gh api repos/Leo1104963/civ-game-clone/pulls/N/reviews \
+     -X POST -f event="APPROVE" -f body="..."
+   ```
+
+2. **Branch protection requires manual setup.** Neither the bot token
+   nor the approval token has `administration` scope. Branch protection
+   must be configured from the GitHub web UI by `Leo1104963`.
+
+3. **`test-author` subagent type not registered at runtime.** Use
+   general-purpose agents with test-author instructions instead. The
+   `dev`, `reviewer`, `designer`, `dispatcher`, `playtester` types
+   are registered and work.
+
+4. **Nightly playtester not implemented.** See issue #16. Currently
+   no automated regression testing against `main` outside of CI.
+
+## Infrastructure setup (completed)
+
+All items below are done:
+
+- [x] Bot account `outcast1104` with write access
+- [x] Approval token at `~/.claude/secrets/gh-approval-token`
+- [x] Bot token at `~/.claude/secrets/gh-bot-token`
+- [x] `gh-review-mcp` server at `tools/gh-review-mcp/server.py`
+- [x] `CLAUDE.md` with commands, architecture, agent rules
+- [x] Six agent files in `.claude/agents/`
+- [x] `.github/workflows/ci.yml` with 4 check jobs + notify-failure
+- [x] `.github/CODEOWNERS` — `* @Leo1104963`, `tests/** @Leo1104963`
+- [x] Branch protection on `main` (via GitHub UI)
+- [x] `scripts/game-launch-verify.sh`
+- [x] Bot identity implicit via env vars in `settings.json` /
+      `settings.local.json`
+- [x] `CivGame.sln` with `src/CivGame/` + `tests/CivGame.Tests/`
+- [x] Godot 4.4 project init (`project.godot`, scenes, export presets)
+- [x] GitHub labels for tracks, status, types
+- [x] Auto-merge + auto-delete head branches enabled
+
+## Agent Teams orchestration
+
+This repo uses Claude Code Agent Teams for issue-driven work.
+
+- **Env var**: `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`
+- **Minimum Claude Code version**: v2.1.32
+- **Subscription**: Claude Max
+
+The session lead (dispatcher agent) is invoked manually per-issue by
+the user. Teammates (dev, test-author, gameplay-designer) collaborate
+directly via peer messages. The reviewer runs in a separate session.
+
+See:
+- `docs/agent-workflow.md` — team composition, communication
+  protocol, escalation rules.
+- `docs/session-startup.md` — how to start a session from a chat.
+- `.claude/agents/*.md` — per-agent prompts (source of truth).

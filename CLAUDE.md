@@ -2,6 +2,29 @@
 
 Project-level instructions for all agents working on this repo.
 
+## Agent roles
+
+Each agent has a fixed scope. See `.claude/agents/*.md` for full per-agent
+instructions. See `docs/agent-workflow.md` for how agents collaborate in
+Claude Code Agent Teams sessions.
+
+| Agent                 | Scope                                    | Constraint                                                |
+|-----------------------|------------------------------------------|-----------------------------------------------------------|
+| **dispatcher**        | Session lead (per-issue)                 | MUST NOT write code, reviews, issues                      |
+| **dev**               | `src/` only (teammate)                   | MUST NOT edit `tests/`                                    |
+| **test-author**       | `tests/` only (teammate)                 | MUST NOT edit `src/`                                      |
+| **gameplay-designer** | Design-intent consultant (teammate)      | MUST NOT write code, write tests, edit specs              |
+| **reviewer**          | PR reviews only (independent session)    | MUST NOT write code; runs under a separate credential     |
+| **designer**          | Issues & backlog                         | MUST NOT write code                                       |
+| **playtester**        | Scenarios & reports                      | MUST NOT write code                                       |
+
+- All PRs target `main` and require: CI green + 1 approving review from
+  `@Leo1104963` (CODEOWNERS).
+- One feature branch per issue: `feat/<issue-number>-<short-name>`
+- Squash merge only via auto-merge
+- NEVER push directly to `main`
+- NEVER force-push
+
 ## Project
 
 Civilization-style 4X game. Godot 4.x engine, C# (.NET 8), GDScript only
@@ -35,17 +58,6 @@ dotnet format
 - `.claude/agents/` — agent definitions
 - `.github/workflows/ci.yml` — CI pipeline
 
-## Agent rules
-
-- **dev** works only under `src/`. Never edits `tests/`.
-- **test-author** works only under `tests/`. Never edits `src/`.
-- **reviewer** never writes code. Uses `gh-review-mcp` to approve or
-  request changes.
-- **designer** never writes code. Creates issues, maintains the backlog.
-- **playtester** never writes code. Runs scenarios, reports regressions.
-- All PRs target `main` and require: CI green + 1 approving review from
-  `@Leo1104963` (CODEOWNERS).
-
 ## Bot identity
 
 All agents operate as `outcast1104` automatically. Git identity and
@@ -55,13 +67,6 @@ and `.claude/settings.local.json` — no manual setup needed per agent.
 The reviewer agent additionally has access to the `Leo1104963` approval
 credential via its MCP server. All other GitHub operations (commits,
 pushes, PRs, issues) use the `outcast1104` bot identity.
-
-## Git workflow
-
-- One feature branch per issue: `feat/<issue-number>-<short-name>`
-- Squash merge only via auto-merge
-- Never push directly to `main`
-- Never force-push
 
 ## Code style
 
