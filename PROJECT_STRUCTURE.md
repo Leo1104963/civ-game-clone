@@ -37,19 +37,36 @@ Stored in `.claude/agents/*.md`. Frontmatter sets `model`, `effort`,
 
 | Agent | Role | Writes code? | Isolation | Concurrency |
 |---|---|---|---|---|
-| **designer** | Plans features, writes GH issues with self-contained specs, maintains dependency DAG, triages bugs | No | None | 1 |
-| **dev** | Implements one issue on a feature branch, runs local Game Launch Verify, opens PR | Yes | worktree | N |
+| **designer** | Plans features, writes GH issues with self-contained specs, maintains dependency DAG, triages bugs and playtester regressions | No | None | 1 |
+| **test-author** | Reads approved issue spec, writes failing unit tests on the feature branch as an executable contract for dev | Yes (tests only) | worktree | N |
+| **dev** | Implements one issue on a feature branch until tests pass, runs local Game Launch Verify, opens PR. Cannot edit test files. | Yes (src only) | worktree | N |
 | **reviewer** | Independent review against the issue spec, calls `pr_approve` or `pr_request_changes` via MCP | No | worktree | N |
 | **playtester** | Runs scripted headless AI-vs-AI game scenarios, asserts invariants, scans logs | No | worktree | N |
-| **dispatcher** | Reads backlog, computes unblocked work, fires parallel dev/reviewer agents in background | No | None | 1 |
+| **dispatcher** | Reads backlog, computes unblocked work, fires parallel dev/reviewer/test-author agents in background, monitors running agents | No | None | 1 |
 
 ### Hard agent boundaries
 
 - designer never writes code
+- test-author writes only under `tests/` — never touches `src/`
+- dev never edits files under `tests/` (enforced by CODEOWNERS)
 - dev never self-reviews (enforced by branch protection + MCP isolation)
 - reviewer never implements
 - reviewer handles exactly ONE PR per session
 - playtester never changes code
+
+### Iteration caps
+
+Every dev agent session has a hard limit of **5 CI retry cycles**. If the
+agent cannot produce a green build + passing tests within 5 attempts:
+
+1. Dev agent stops, adds label `status:stuck` and a comment summarizing
+   what failed and why.
+2. Dispatcher surfaces the stuck PR to the human.
+3. No further dev agents are spawned for that issue until the human
+   intervenes or designer re-specs the issue.
+
+Test-author has a lower cap of **3 attempts** to produce a test suite that
+compiles and fails for the right reasons (not import errors or typos).
 
 ---
 
@@ -57,20 +74,41 @@ Stored in `.claude/agents/*.md`. Frontmatter sets `model`, `effort`,
 
 ```
 PLAN      designer creates GH issue with self-contained spec, track label,
-          depends-on links
+          depends-on links, and acceptance criteria
 APPROVE   human thumbs-up the issue
-CLAIM     dispatcher fires a dev agent in a worktree; dev adds
+SPEC      dispatcher fires test-author in a worktree. Test-author reads
+          the issue spec, writes failing unit tests under tests/,
+          commits to the feature branch, opens a spec-PR.
+          Tests must compile and fail for the right reason (not typos).
+CLAIM     after spec-PR merges (or is stacked), dispatcher fires a dev
+          agent in a worktree on the same branch; dev adds
           `claimed-by:dev-<ts>` label
-BUILD     dev implements, runs local Game Launch Verify, commits, opens
-          PR via `gh pr create`, then `gh pr merge --auto --squash`
+BUILD     dev implements under src/ until all tests pass, runs local
+          Game Launch Verify, commits, opens PR via `gh pr create`,
+          then `gh pr merge --auto --squash`.
+          Dev CANNOT edit files under tests/ (CODEOWNERS enforced).
+          If stuck after 5 CI cycles → label `status:stuck`, stop.
 CI        GitHub Actions runs build + unit-tests + game-launch-verify + lint
 REVIEW    dispatcher (or post-PR-open hook) spawns reviewer agent in fresh
-          worktree. Reviewer calls `pr_approve` or `pr_request_changes`
-          via gh-review-mcp
+          worktree. Reviewer checks: (a) tests match spec, (b) impl is
+          clean, (c) no test files touched by dev. Calls `pr_approve`
+          or `pr_request_changes` via gh-review-mcp
 MERGE     GitHub auto-merge fires when every protection rule is satisfied
 PLAYTEST  nightly cron fires playtester agent against `main`; regressions
-          open `type:bug` issues
+          open `type:bug` issues, triaged by designer
 ```
+
+### Stuck / bad-spec circuit breaker
+
+If the dev agent determines that failing tests are structurally wrong (e.g.
+testing a non-existent public API, contradicting the spec), it does NOT
+edit the tests. Instead:
+
+1. Dev stops, adds label `blocked:bad-spec` with a comment explaining
+   the mismatch.
+2. Dispatcher re-spawns test-author to revise the test suite.
+3. After test-author commits a fix, dispatcher re-spawns dev.
+4. If the cycle repeats twice, the issue is escalated to the human.
 
 ---
 
@@ -88,13 +126,39 @@ runs concurrently.
 
 ### 2. Per-agent worktrees
 
-Every working agent (dev, reviewer, playtester) runs in its own
-`git worktree`.
+Every working agent (test-author, dev, reviewer, playtester) runs in its
+own `git worktree`.
 
 ### 3. Background fan-out
 
 Dispatcher invokes subagents with `run_in_background: true`. Ceiling:
 ~3–5 concurrent dev agents.
+
+### 4. File-level collision prevention
+
+Two issues on different tracks may still touch shared files (e.g.
+`src/core/Game.cs`). Mitigations:
+
+- Designer adds `touches:<path>` labels to issues that modify shared core
+  files. Dispatcher treats `touches:` overlap as a serialization
+  constraint, same as same-track.
+- If two PRs conflict at merge time, the second PR's dev agent rebases
+  and re-runs CI. If rebase fails, dispatcher escalates to the human.
+
+### 5. Dispatcher monitoring loop
+
+While agents are running, dispatcher polls at ~2-minute intervals:
+
+1. **PR state check** — has a PR been opened? merged? failed CI?
+2. **Stuck detection** — has a dev agent been running > 30 minutes with
+   no new commits? Flag as potentially stuck.
+3. **Stale worktree cleanup** — if an agent exited without cleaning up,
+   dispatcher removes the orphan worktree.
+4. **Review fan-out** — as soon as a PR is opened and CI starts, spawn
+   reviewer (don't wait for CI green; reviewer can read the diff while
+   CI runs in parallel).
+5. **Escalation** — surface `status:stuck` and `blocked:bad-spec` issues
+   to the human via a summary comment on the issue.
 
 ---
 
@@ -123,10 +187,11 @@ Applied via `gh api repos/:owner/:repo/branches/main/protection`:
 
 #### Credential model
 
-- **Bot identity** (`leonard-dev-bot`, second GitHub account) — holds
-  `contents:write` + `pull-requests:write`. Used by **dev**, **designer**,
-  **playtester**, and **dispatcher** for all GitHub operations: commits,
-  pushes, `gh pr create`, `gh issue create`, comments, labels, auto-merge.
+- **Bot identity** (`outcast1104`, second GitHub account) — holds
+  `contents:write` + `pull-requests:write`. Used by **dev**,
+  **test-author**, **designer**, **playtester**, and **dispatcher** for
+  all GitHub operations: commits, pushes, `gh pr create`,
+  `gh issue create`, comments, labels, auto-merge.
 - **Approval identity** (`Leo1104963`, primary account) — used only to
   call `pr_approve` / `pr_request_changes` / `pr_comment_review` via the
   MCP proxy. Never opens PRs, never pushes commits, never edits issues.
@@ -247,15 +312,34 @@ dotnet test --logger "console;verbosity=detailed"
 
 ### Test surfaces
 
+TDD-suitable (test-author writes these as failing tests before dev starts):
+
 - Combat resolution
-- AI decision-making (invariants, no-crash on edge cases)
 - Tech tree unlocks
 - Save/load roundtrip
 - Turn processing
 - City yields, build queues, unit movement
 
-Playtester runs scripted headless AI-vs-AI scenarios (e.g. 50 turns on a
-fixed-seed map, asserting no crash and no invariant violations).
+Not TDD-suitable (tested via Game Launch Verify + playtester instead):
+
+- Scene loading, UI layout, rendering
+- Input handling
+- Audio
+
+Higher-level integration:
+
+- AI decision-making (invariants, no-crash on edge cases)
+- Playtester runs scripted headless AI-vs-AI scenarios (e.g. 50 turns on a
+  fixed-seed map, asserting no crash and no invariant violations)
+
+### Verification layers
+
+| Layer | Owner | When | Scope |
+|---|---|---|---|
+| Unit tests (TDD) | test-author → dev | Pre-merge, per issue | Pure logic: combat, yields, tech, turns, save/load |
+| CI integration | GitHub Actions | Pre-merge, per PR | Build + unit-tests + lint |
+| Game Launch Verify | CI + dev (local) | Pre-merge, per PR | Headless boot, log scan, screenshot |
+| AI-vs-AI scenarios | playtester | Nightly, post-merge | Full-game invariants over N turns |
 
 ---
 
@@ -266,6 +350,7 @@ Game/
 ├── .claude/
 │   ├── agents/
 │   │   ├── designer.md
+│   │   ├── test-author.md
 │   │   ├── dev.md
 │   │   ├── reviewer.md
 │   │   ├── playtester.md
@@ -280,6 +365,7 @@ Game/
 │   ├── game-launch-verify.sh
 │   └── dispatch.sh
 ├── src/
+├── tests/
 ├── CLAUDE.md
 └── PROJECT_STRUCTURE.md
 ```
@@ -291,24 +377,35 @@ Game/
 1. ~~Engine~~ — **RESOLVED: Godot 4 + C#**
 2. ~~Context rotation~~ — **RESOLVED: MCP proxy (Python) + two GitHub
    identities**
-3. **GitHub repo** — name + `gh repo create`
-4. **Bot account** — `leonard-dev-bot` needs to be created, 2FA enabled,
-   PAT generated, added as collaborator
+3. ~~Agent Teams primitive~~ — **EVALUATED, DECLINED.** Claude Code's
+   experimental `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` flag provides
+   peer-to-peer messaging and shared in-session task lists. We use
+   GitHub Issues as the durable task queue instead — survives session
+   crashes, is human-inspectable, and doesn't require experimental
+   feature flags.
+4. **GitHub repo** — name + `gh repo create`
+5. ~~Bot account~~ — **RESOLVED: `outcast1104` created.** Needs 2FA
+   enabled, PAT generated, added as collaborator.
 
 ## Next steps
 
-1. Create `leonard-dev-bot` GitHub account, enable 2FA, generate PAT
-   with `contents:write` + `pull-requests:write`
-2. `gh repo create`, initial commit, add bot account as collaborator
-3. Store approval token at `~/.claude/secrets/gh-approval-token`
-4. Build `gh-review-mcp` — Python + FastMCP, three tools
-5. Draft `CLAUDE.md` with engine-specific commands
-6. Draft five agent files. `reviewer.md` declares `gh-review-mcp` in
-   `mcpServers`
-7. Draft `.github/workflows/ci.yml` — `build`, `unit-tests`,
+1. ~~Create bot GitHub account~~ — **DONE: `outcast1104`**
+2. Enable 2FA on `outcast1104`, generate PAT with `contents:write` +
+   `pull-requests:write`
+3. `gh repo create`, initial commit, add `outcast1104` as collaborator
+4. Store approval token at `~/.claude/secrets/gh-approval-token`
+5. Build `gh-review-mcp` — Python + FastMCP, three tools
+6. Draft `CLAUDE.md` with engine-specific commands
+7. Draft six agent files. `reviewer.md` declares `gh-review-mcp` in
+   `mcpServers`. `test-author.md` scoped to `tests/` only.
+8. Draft `.github/workflows/ci.yml` — `build`, `unit-tests`,
    `game-launch-verify`, `lint`
-8. Draft `CODEOWNERS` — `* @Leo1104963`
-9. Apply branch protection via `gh api ... /branches/main/protection`
-10. Stub `scripts/game-launch-verify.sh`
-11. Stub `.claude/settings.json` hooks for auto-review-on-PR and
+9. Draft `CODEOWNERS`:
+   - `* @Leo1104963` (catch-all, review required from primary)
+   - `tests/** @Leo1104963` (prevents dev agent from editing tests
+     without approval)
+10. Apply branch protection via `gh api ... /branches/main/protection`
+11. Stub `scripts/game-launch-verify.sh`
+12. Stub `.claude/settings.json` hooks for auto-review-on-PR and
     auto-dispatch
+13. Create `tests/` directory with initial project structure for C# tests

@@ -1,0 +1,5 @@
+# Default: all changes require review from the primary account
+* @Leo1104963
+
+# Tests: prevents dev agent from editing tests without approval
+tests/** @Leo1104963
