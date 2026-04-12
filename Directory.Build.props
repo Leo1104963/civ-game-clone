@@ -1,0 +1,11 @@
+<Project>
+  <!--
+    Set GodotProjectDir before Godot.NET.Sdk is imported so all SDK-computed
+    paths (output, obj, source-generator IntermediateOutputPath) resolve to the
+    correct project root on every platform.  The Godot.NET.Sdk's Sdk.props adds
+    the trailing slash via EnsureTrailingSlash.
+  -->
+  <PropertyGroup>
+    <GodotProjectDir>$(MSBuildThisFileDirectory)</GodotProjectDir>
+  </PropertyGroup>
+</Project>
