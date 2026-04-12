@@ -5,9 +5,11 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <EnableDynamicLoading>true</EnableDynamicLoading>
-    <GodotProjectDir>$(MSBuildThisFileDirectory)..\..\</GodotProjectDir>
-    <BaseOutputPath>$(GodotProjectDir).godot\mono\temp\bin\</BaseOutputPath>
-    <OutputPath>$(GodotProjectDir).godot\mono\temp\bin\$(Configuration)\</OutputPath>
+    <GodotProjectDir>$([MSBuild]::GetDirectoryNameOfFileAbove('$(MSBuildThisFileDirectory)', 'project.godot'))/</GodotProjectDir>
+    <BaseOutputPath>$(GodotProjectDir).godot/mono/temp/bin/</BaseOutputPath>
+    <OutputPath>$(GodotProjectDir).godot/mono/temp/bin/$(Configuration)/</OutputPath>
+    <BaseIntermediateOutputPath>$(GodotProjectDir).godot/mono/temp/obj/</BaseIntermediateOutputPath>
+    <IntermediateOutputPath>$(GodotProjectDir).godot/mono/temp/obj/$(Configuration)/</IntermediateOutputPath>
   </PropertyGroup>
 
 </Project>
