@@ -66,11 +66,11 @@ jobs:
       - name: Restore .NET dependencies
         run: dotnet restore
 
-      - name: Create Godot assembly output directory
-        run: mkdir -p .godot/mono/temp/bin/Debug
-
       - name: Build C# solution (outputs to .godot/mono/temp/bin/Debug/)
-        run: dotnet build src/CivGame/CivGame.csproj --configuration Debug
+        run: |
+          mkdir -p .godot/mono/temp/bin/Debug
+          dotnet build src/CivGame/CivGame.csproj --configuration Debug \
+            -p:OutputPath="$(pwd)/.godot/mono/temp/bin/Debug/"
 
       - name: Import Godot project assets
         run: timeout 60 godot --headless --import --quit-after 10000 || true
