@@ -41,3 +41,15 @@ ehthumbs.db
 *.key
 secrets/
 .claude/settings.local.json
+
+# Godot UID cache
+*.uid
+
+# Claude Code runtime
+.claude/tmp/
+.claude/worktrees/
+.claude/agent-memory/
+.claude/scheduled_tasks.lock
+
+# Logs
+launch.log
