@@ -57,6 +57,14 @@ jobs:
           sudo mv Godot_v4.4.1-stable_linux.x86_64 /usr/local/bin/godot
           chmod +x /usr/local/bin/godot
 
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Build C# solution
+        run: dotnet build --configuration Release
+
       - name: Run game launch verify
         run: bash scripts/game-launch-verify.sh
 
