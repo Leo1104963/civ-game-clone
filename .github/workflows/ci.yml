@@ -75,6 +75,13 @@ jobs:
             cp .godot/mono/temp/bin/Debug/CivGame.pdb ".godot/mono/temp/bin/$dir/" 2>/dev/null || true
           done
 
+      - name: Verify ScriptPath registration in DLL
+        run: |
+          echo "=== DLL strings containing res:// or ScriptPath ==="
+          strings .godot/mono/temp/bin/Debug/CivGame.dll | grep -E "res://|ScriptPath|MainMenuController" || echo "WARNING: none found"
+          echo "=== Generated source files ==="
+          find . -path '*/.godot/*' -name '*.generated.cs' 2>/dev/null | head -20 || echo "none"
+
       - name: Run game launch verify
         run: bash scripts/game-launch-verify.sh
 
