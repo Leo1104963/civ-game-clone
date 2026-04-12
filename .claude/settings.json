@@ -1,0 +1,24 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "pattern": "gh pr create",
+        "command": "echo 'PR created — dispatcher should spawn reviewer'",
+        "description": "Signal that a PR was opened so the dispatcher can fire a reviewer agent"
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Read",
+      "Glob",
+      "Grep",
+      "Bash(git *)",
+      "Bash(gh *)",
+      "Bash(dotnet test *)",
+      "Bash(dotnet format *)",
+      "Bash(dotnet build *)"
+    ]
+  }
+}
