@@ -66,8 +66,11 @@ jobs:
       - name: Import Godot project
         run: godot --headless --import || true
 
-      - name: Build C# solution via Godot
-        run: godot --headless --build-solutions || true
+      - name: Build C# assembly and stage for Godot runtime
+        run: |
+          dotnet build --configuration Debug
+          mkdir -p .godot/mono/temp/bin/Debug
+          cp bin/Debug/net8.0/*.dll .godot/mono/temp/bin/Debug/
 
       - name: Run game launch verify
         run: bash scripts/game-launch-verify.sh
