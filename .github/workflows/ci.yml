@@ -57,7 +57,35 @@ jobs:
           sudo mv Godot_v4.4.1-stable_linux.x86_64 /usr/local/bin/godot
           chmod +x /usr/local/bin/godot
 
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore .NET dependencies
+        run: dotnet restore src/CivGame/CivGame.csproj
+
+      - name: Build C# solution
+        run: |
+          mkdir -p .godot/mono/temp/bin/Debug
+          dotnet build src/CivGame/CivGame.csproj --configuration Debug \
+            -p:OutputPath="$(pwd)/.godot/mono/temp/bin/Debug/"
+
+      - name: Copy GodotSharp assemblies alongside CivGame.dll
+        run: |
+          GODOTSHARP=$(find /usr/local/bin/GodotSharp -name "GodotSharp.dll" -type f | head -1)
+          if [ -z "$GODOTSHARP" ]; then
+            echo "ERROR: GodotSharp.dll not found"; find /usr/local/bin/GodotSharp -type f | head -20; exit 1
+          fi
+          echo "Copying from: $(dirname $GODOTSHARP)"
+          cp "$(dirname $GODOTSHARP)"/*.dll .godot/mono/temp/bin/Debug/
+
+      - name: Diagnostic — list .godot/mono/temp/bin/Debug/
+        run: ls -la .godot/mono/temp/bin/Debug/
+
       - name: Run game launch verify
+        env:
+          TIMEOUT: "30"
         run: bash scripts/game-launch-verify.sh
 
   lint:
