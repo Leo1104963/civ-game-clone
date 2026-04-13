@@ -105,7 +105,11 @@ Once the spec exists and `status:in-progress` is set:
    - test-author proposes the failing-test surface.
    - dev pushes back on specific interfaces / edge cases.
    - They converge on test names and signatures.
-   - test-author commits tests. dev implements. CI runs.
+   - test-author commits tests. **Dev does NOT implement until the dispatcher
+     receives "tests committed" from test-author and explicitly tells dev to
+     proceed.** Dev may read the codebase and discuss API shapes with
+     test-author in the meantime, but must not write any src/ changes.
+   - Once dispatcher forwards the "tests committed" signal to dev, dev implements. CI runs.
 3. When dev or test-author has any **design question** (terrain
    cost, unit-per-tile rule, ambiguous spec language, etc.), they
    message the **designer** directly. The designer answers with
