@@ -109,4 +109,48 @@ public class MinimapMathTests
         Assert.Throws<ArgumentException>(() =>
             MinimapMath.GridToMinimapRect(new HexCoord(0, 0), zeroSize, gridW: 10, gridH: 8));
     }
+
+    // --- MinimapMath.MinimapToGrid ---
+
+    [Fact]
+    public void Should_ReturnOrigin_When_ClickIsTopLeft()
+    {
+        var minimap = (W: 200f, H: 160f);
+        var coord = MinimapMath.MinimapToGrid((X: 0f, Y: 0f), minimap, gridW: 10, gridH: 8);
+        Assert.Equal(new HexCoord(0, 0), coord);
+    }
+
+    [Fact]
+    public void Should_ReturnLastCell_When_ClickIsBottomRight()
+    {
+        var minimap = (W: 200f, H: 160f);
+        int gridW = 10, gridH = 8;
+        var coord = MinimapMath.MinimapToGrid((X: minimap.W - 1f, Y: minimap.H - 1f), minimap, gridW, gridH);
+        Assert.Equal(new HexCoord(gridW - 1, gridH - 1), coord);
+    }
+
+    [Fact]
+    public void Should_RoundTrip_When_ClickIsCenterOfCell()
+    {
+        var minimap = (W: 200f, H: 160f);
+        int gridW = 10, gridH = 8;
+        var origin = new HexCoord(3, 2);
+        var rect = MinimapMath.GridToMinimapRect(origin, minimap, gridW, gridH);
+        var center = (X: rect.X + rect.W / 2f, Y: rect.Y + rect.H / 2f);
+
+        var result = MinimapMath.MinimapToGrid(center, minimap, gridW, gridH);
+        Assert.Equal(origin, result);
+    }
+
+    [Fact]
+    public void Should_ClampToValidCoord_When_ClickIsOutOfMinimapBounds()
+    {
+        var minimap = (W: 200f, H: 160f);
+        int gridW = 10, gridH = 8;
+
+        // Click well outside minimap bounds — must not throw, must return a valid coord
+        var coord = MinimapMath.MinimapToGrid((X: 999f, Y: 999f), minimap, gridW, gridH);
+        Assert.InRange(coord.Q, 0, gridW - 1);
+        Assert.InRange(coord.R, 0, gridH - 1);
+    }
 }

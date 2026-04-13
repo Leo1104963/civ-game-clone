@@ -52,6 +52,14 @@ public class CameraHelpersTests
     // --- CameraClamp.ClampPosition ---
 
     [Fact]
+    public void ClampPosition_ThrowsArgumentException_WhenBoundsAreDegenerate()
+    {
+        var pos = (X: 100f, Y: 100f);
+        var bounds = (MinX: 300f, MinY: 0f, MaxX: 100f, MaxY: 400f); // MinX > MaxX
+        Assert.Throws<ArgumentException>(() => CameraClamp.ClampPosition(pos, bounds));
+    }
+
+    [Fact]
     public void Should_ReturnPosition_When_PositionWithinBounds()
     {
         var pos = (X: 100f, Y: 100f);
