@@ -27,12 +27,12 @@ public class TerrainTextureSetTests
     // --- Index in range ---
 
     [Theory]
-    [InlineData(TerrainType.Grass,  1)]
-    [InlineData(TerrainType.Grass,  2)]
-    [InlineData(TerrainType.Grass,  3)]
+    [InlineData(TerrainType.Grass, 1)]
+    [InlineData(TerrainType.Grass, 2)]
+    [InlineData(TerrainType.Grass, 3)]
     [InlineData(TerrainType.Plains, 3)]
     [InlineData(TerrainType.Forest, 3)]
-    [InlineData(TerrainType.Water,  3)]
+    [InlineData(TerrainType.Water, 3)]
     public void Should_ReturnIndexInRange_When_VariantCountGiven(TerrainType terrain, int variantCount)
     {
         var coord = new HexCoord(1, 1);
