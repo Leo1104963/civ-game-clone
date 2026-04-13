@@ -5,7 +5,8 @@ using CivGame.World;
 namespace CivGame.Rendering;
 
 /// <summary>
-/// Godot Node2D wrapper around UnitRenderer. Draws all units as colored circles.
+/// Godot Node2D wrapper around UnitRenderer. Draws all units as colored circles,
+/// with the fill color chosen by unit type (Warrior = red, Settler = white).
 /// </summary>
 public partial class UnitRendererNode : Node2D
 {
@@ -31,7 +32,9 @@ public partial class UnitRendererNode : Node2D
             var center = new Vector2(px, py);
 
             bool isSelected = unit.Id == Data.SelectedUnitId;
-            var (r, g, b) = isSelected ? UnitRenderer.SelectedUnitColor : UnitRenderer.UnitColor;
+            var (r, g, b) = isSelected
+                ? UnitRenderer.SelectedUnitColor
+                : UnitRenderer.GetUnitColor(unit.UnitType);
             var color = new Color(r, g, b);
 
             DrawCircle(center, UnitRenderer.UnitRadius, color);
