@@ -187,22 +187,22 @@ public class MapGeneratorTests
                 totalCells++;
                 switch (cell.Terrain)
                 {
-                    case TerrainType.Grass:   grassCount++;  break;
-                    case TerrainType.Forest:  forestCount++; break;
-                    case TerrainType.Water:   waterCount++;  break;
+                    case TerrainType.Grass: grassCount++; break;
+                    case TerrainType.Forest: forestCount++; break;
+                    case TerrainType.Water: waterCount++; break;
                 }
             }
         }
 
-        double grassPct  = (double)grassCount  / totalCells;
+        double grassPct = (double)grassCount / totalCells;
         double forestPct = (double)forestCount / totalCells;
-        double waterPct  = (double)waterCount  / totalCells;
+        double waterPct = (double)waterCount / totalCells;
 
-        Assert.True(grassPct  >= 0.45 && grassPct  <= 0.65,
+        Assert.True(grassPct >= 0.45 && grassPct <= 0.65,
             $"Grass %={grassPct:P1} is outside expected 45-65%.");
         Assert.True(forestPct >= 0.05 && forestPct <= 0.20,
             $"Forest %={forestPct:P1} is outside expected 5-20%.");
-        Assert.True(waterPct  >= 0.05 && waterPct  <= 0.15,
+        Assert.True(waterPct >= 0.05 && waterPct <= 0.15,
             $"Water %={waterPct:P1} is outside expected 5-15%.");
     }
 }
