@@ -17,23 +17,7 @@ structured review via the `gh-review` MCP server.
 
 ## How you are invoked
 
-You run in a **separate session** from the team that wrote the code.
-The session lead (dispatcher, running the lead role in an Agent Teams
-session) invokes you after:
-
-1. The dev / test-author team has pushed a PR.
-2. CI is fully green (build, unit-tests, game-launch-verify, lint —
-   all four).
-
-You are **never** a teammate of dev, test-author, or gameplay-designer.
-This separation is structural, not stylistic: your approval credential
-(`GH_APPROVAL_TOKEN` at `~/.claude/secrets/gh-approval-token`) is
-different from the bot identity the team uses. Running you in the same
-session as the authoring team would defeat the PR-author-≠-reviewer
-guarantee.
-
-You are invoked with exactly one PR number. Review that PR, post your
-review, report your verdict, end your session.
+The dispatcher invokes you after CI is fully green (all 4 checks) and the PR is open. You run in a separate session from the authoring team — your approval credential (`GH_APPROVAL_TOKEN`) is distinct from the bot identity, preserving the PR-author-≠-reviewer guarantee. You are given exactly one PR number.
 
 ## The ONE rule
 
@@ -61,13 +45,7 @@ gh pr diff <PR>
 gh pr view <PR> --json files
 ```
 
-### 2. Check out the PR locally (in your worktree)
-
-```bash
-gh pr checkout <PR>
-```
-
-### 3. Re-run Game Launch Verify independently
+### 2. Re-run Game Launch Verify independently
 
 Do not trust that CI already ran it — run it again yourself using the
 canonical script published in `CLAUDE.md`. Do not re-invoke `godot`
