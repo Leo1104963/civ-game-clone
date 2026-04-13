@@ -15,7 +15,7 @@ public sealed class CityManager
     /// <summary>
     /// Create a city at the given position. Throws if out of bounds or already occupied by a city.
     /// </summary>
-    public City CreateCity(string name, HexCoord position, HexGrid grid)
+    public City CreateCity(string name, HexCoord position, HexGrid grid, int ownerId = 0)
     {
         if (!grid.InBounds(position))
             throw new ArgumentException($"Position {position} is out of bounds.");
@@ -23,7 +23,7 @@ public sealed class CityManager
         if (_positionIndex.ContainsKey(position))
             throw new InvalidOperationException($"Position {position} already has a city.");
 
-        var city = new City(name, position);
+        var city = new City(name, position, ownerId);
         _cities.Add(city);
         _positionIndex[position] = city;
         return city;
@@ -32,6 +32,24 @@ public sealed class CityManager
     /// <summary>Returns the city at the given coordinate, or null.</summary>
     public City? GetCityAt(HexCoord coord) =>
         _positionIndex.TryGetValue(coord, out var city) ? city : null;
+
+    /// <summary>Returns all cities owned by the given player.</summary>
+    public IEnumerable<City> CitiesOwnedBy(int ownerId)
+    {
+        foreach (var c in _cities)
+        {
+            if (c.OwnerId == ownerId) yield return c;
+        }
+    }
+
+    /// <summary>Tick production for cities owned by the given player only.</summary>
+    public void TickProductionFor(int ownerId)
+    {
+        foreach (var c in _cities)
+        {
+            if (c.OwnerId == ownerId) c.TickProduction();
+        }
+    }
 
     /// <summary>Tick production for all cities.</summary>
     public void TickAllProduction()

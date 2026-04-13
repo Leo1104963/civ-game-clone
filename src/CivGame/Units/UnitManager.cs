@@ -19,7 +19,7 @@ public sealed class UnitManager
     /// Throws if the cell is out of bounds, impassable, or already occupied.
     /// Known unit types: "Warrior" (movement 2), "Settler" (movement 2).
     /// </summary>
-    public Unit CreateUnit(string unitType, HexCoord position, HexGrid grid)
+    public Unit CreateUnit(string unitType, HexCoord position, HexGrid grid, int ownerId = 0)
     {
         if (!grid.InBounds(position))
             throw new ArgumentException($"Position {position} is out of bounds.");
@@ -38,10 +38,28 @@ public sealed class UnitManager
             _ => throw new ArgumentException($"Unknown unit type: {unitType}"),
         };
 
-        var unit = new Unit(unitType, position, movementRange);
+        var unit = new Unit(unitType, position, movementRange, ownerId);
         _units.Add(unit);
         _positionIndex[position] = unit;
         return unit;
+    }
+
+    /// <summary>Returns all units owned by the given player.</summary>
+    public IEnumerable<Unit> UnitsOwnedBy(int ownerId)
+    {
+        foreach (var u in _units)
+        {
+            if (u.OwnerId == ownerId) yield return u;
+        }
+    }
+
+    /// <summary>Reset movement budgets for units owned by the given player only.</summary>
+    public void ResetMovementFor(int ownerId)
+    {
+        foreach (var u in _units)
+        {
+            if (u.OwnerId == ownerId) u.ResetMovement();
+        }
     }
 
     /// <summary>Returns the unit at the given coordinate, or null.</summary>
