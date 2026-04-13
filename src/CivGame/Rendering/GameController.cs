@@ -28,6 +28,7 @@ public partial class GameController : Node2D
         var inputHandler = GetNode<InputHandlerNode>("InputHandler");
         var turnHud = GetNode<TurnHud>("CanvasLayer/TurnHud");
         var cityInfoPanel = GetNode<CityInfoPanel>("CanvasLayer/CityInfoPanel");
+        var selectedUnitPanel = GetNode<SelectedUnitPanel>("CanvasLayer/SelectedUnitPanel");
 
         // Initialize renderers
         float hexSize = gridRenderer.HexSize;
@@ -51,8 +52,21 @@ public partial class GameController : Node2D
             }
         };
 
-        inputHandler.UnitSelected += (_) => cityInfoPanel.HidePanel();
-        inputHandler.UnitDeselected += () => cityInfoPanel.HidePanel();
+        inputHandler.UnitSelected += (unitId) =>
+        {
+            cityInfoPanel.HidePanel();
+            var unit = _session.Units.AllUnits.FirstOrDefault(u => u.Id == unitId);
+            if (unit is not null)
+            {
+                selectedUnitPanel.ShowUnit(unit, _session.Units, _session.Cities, _session.Grid);
+            }
+        };
+
+        inputHandler.UnitDeselected += () =>
+        {
+            cityInfoPanel.HidePanel();
+            selectedUnitPanel.HidePanel();
+        };
 
         // Connect build button
         cityInfoPanel.BuildGranaryPressed += (cityId) =>
@@ -62,6 +76,26 @@ public partial class GameController : Node2D
             {
                 city.StartBuilding(BuildingCatalog.Granary);
                 cityInfoPanel.ShowCity(city); // refresh display
+            }
+        };
+
+        // Connect Found City button
+        selectedUnitPanel.FoundCityPressed += (unitId) =>
+        {
+            var unit = _session.Units.AllUnits.FirstOrDefault(u => u.Id == unitId);
+            if (unit is null) return;
+
+            var newCity = _session.Units.FoundCityWithSettler(
+                unit,
+                $"City {_session.Cities.AllCities.Count + 1}",
+                _session.Cities,
+                _session.Grid);
+
+            if (newCity is not null)
+            {
+                selectedUnitPanel.HidePanel();
+                unitRenderer.Refresh();
+                cityRenderer.Refresh();
             }
         };
 
