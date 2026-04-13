@@ -19,6 +19,11 @@ public partial class InputHandlerNode : Node2D
     private MovementOverlayNode? _movementOverlayNode;
 
     private Unit? _selectedUnit;
+    private VisibilityMap? _visibility;
+    private int _viewerOwnerId;
+
+    /// <summary>The currently selected unit, or null if none selected.</summary>
+    public Unit? SelectedUnit => _selectedUnit;
 
     /// <summary>Fired when a unit is selected. Parameter is the unit ID.</summary>
     public event Action<int>? UnitSelected;
@@ -36,12 +41,16 @@ public partial class InputHandlerNode : Node2D
         GameSession session,
         HexGridRenderer gridRenderer,
         UnitRendererNode unitRendererNode,
-        MovementOverlayNode movementOverlayNode)
+        MovementOverlayNode movementOverlayNode,
+        VisibilityMap? visibility = null,
+        int viewerOwnerId = 0)
     {
         _session = session;
         _gridRenderer = gridRenderer;
         _unitRendererNode = unitRendererNode;
         _movementOverlayNode = movementOverlayNode;
+        _visibility = visibility;
+        _viewerOwnerId = viewerOwnerId;
     }
 
     public override void _UnhandledInput(InputEvent @event)
@@ -78,7 +87,8 @@ public partial class InputHandlerNode : Node2D
                     if (_selectedUnit.CanMove)
                     {
                         var newReachable = _session.Units.GetReachableCells(_selectedUnit, _session.Grid);
-                        _movementOverlayNode?.ShowReachable(newReachable, _session.Grid, _gridRenderer!.HexSize);
+                        var visibleNewReachable = FilterUnseen(newReachable);
+                        _movementOverlayNode?.ShowReachable(visibleNewReachable, _session.Grid, _gridRenderer!.HexSize);
                     }
                     else
                     {
@@ -119,9 +129,23 @@ public partial class InputHandlerNode : Node2D
         }
 
         var reachable = _session!.Units.GetReachableCells(unit, _session.Grid);
-        _movementOverlayNode?.ShowReachable(reachable, _session.Grid, _gridRenderer!.HexSize);
+        var visibleReachable = FilterUnseen(reachable);
+        _movementOverlayNode?.ShowReachable(visibleReachable, _session.Grid, _gridRenderer!.HexSize);
 
         UnitSelected?.Invoke(unit.Id);
+    }
+
+    private IReadOnlySet<HexCoord> FilterUnseen(IReadOnlySet<HexCoord> cells)
+    {
+        if (_visibility is null) return cells;
+
+        var filtered = new HashSet<HexCoord>();
+        foreach (var coord in cells)
+        {
+            if (_visibility.IsAt(_viewerOwnerId, coord) != VisibilityState.Unseen)
+                filtered.Add(coord);
+        }
+        return filtered;
     }
 
     private void DeselectUnit()
