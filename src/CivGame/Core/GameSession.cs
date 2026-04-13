@@ -1,3 +1,4 @@
+using CivGame.Ai;
 using CivGame.Cities;
 using CivGame.Units;
 using CivGame.World;
@@ -32,11 +33,13 @@ public sealed class GameSession
     }
 
     /// <summary>
-    /// Create a new game session with v1 default setup:
+    /// Create a new game session with v2 default setup:
     /// - Grid of the given size populated by MapGenerator.Generate(..., seed)
     /// - One city ("Capital") at (width/2, height/2) (terrain is guaranteed Grass)
     /// - One Warrior on a passable neighbor of the capital
     /// - One Settler on a different passable neighbor of the capital
+    /// - PlayerOrder [0, 1]; barbarian AI runs on player 1's TurnEnding,
+    ///   barbarian spawning runs on TurnEnded when CurrentPlayerId advances to 0.
     /// </summary>
     public GameSession(int gridWidth, int gridHeight, int seed = DefaultSeed)
     {
@@ -46,7 +49,9 @@ public sealed class GameSession
         Grid = MapGenerator.Generate(gridWidth, gridHeight, seed);
         Units = new UnitManager();
         Cities = new CityManager();
-        Turns = new TurnManager(Units, Cities, Grid);
+        Turns = new TurnManager(Units, Cities, Grid, new[] { 0, 1 });
+
+        var barbarianRng = new Random(seed ^ 0x5A5A5A5A);
 
         // Place city at grid center (MapGenerator guarantees this is Grass).
         var cityCoord = new HexCoord(gridWidth / 2, gridHeight / 2);
@@ -73,7 +78,23 @@ public sealed class GameSession
         }
 
         Visibility = new VisibilityMap(Grid);
-        Turns.TurnEnded += _ => Visibility.RecomputeForPlayer(Turns.CurrentPlayerId, Units, Cities);
+
+        // Run barbarian AI before player 1's turn ticks (guard on CurrentPlayerId == 1).
+        Turns.TurnEnding += _ =>
+        {
+            if (Turns.CurrentPlayerId == 1)
+                BarbarianAi.TakeTurn(Grid, Units, Cities);
+        };
+
+        // Recompute visibility and possibly spawn a barbarian after each turn ends.
+        Turns.TurnEnded += _ =>
+        {
+            Visibility.RecomputeForPlayer(Turns.CurrentPlayerId, Units, Cities);
+
+            // Spawn at the start of each new game turn (when CurrentPlayerId == 0).
+            if (Turns.CurrentPlayerId == 0)
+                BarbarianSpawner.TrySpawn(Turns.CurrentTurn, Grid, Units, Cities, barbarianRng);
+        };
 
         // Initial recompute for player 0 after all units and cities are placed.
         Visibility.RecomputeForPlayer(0, Units, Cities);
