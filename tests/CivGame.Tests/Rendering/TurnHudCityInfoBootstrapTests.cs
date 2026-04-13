@@ -508,8 +508,9 @@ public class TurnHudCityInfoBootstrapTests
         Assert.True(queued);
         Assert.Equal(5, capital.CurrentProduction!.TurnsRemaining);
 
-        // Player clicks "End Turn" 5 times
-        for (int i = 0; i < 5; i++)
+        // Player clicks "End Turn" 5 times (one full game turn = 2 EndTurn calls with 2-player order [0, 1]).
+        // 5 player-0 turns × 2 = 10 EndTurn calls total → CurrentTurn advances to 6.
+        for (int i = 0; i < 10; i++)
         {
             session.Turns.EndTurn();
         }
