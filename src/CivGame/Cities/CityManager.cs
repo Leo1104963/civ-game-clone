@@ -51,12 +51,35 @@ public sealed class CityManager
         }
     }
 
+    /// <summary>Tick yield-driven production for cities owned by the given player only.</summary>
+    public void TickProductionFor(int ownerId, HexGrid grid)
+    {
+        if (grid is null) throw new ArgumentNullException(nameof(grid));
+        foreach (var c in _cities)
+        {
+            if (c.OwnerId != ownerId) continue;
+            var y = YieldCalculator.Calculate(c, grid);
+            c.TickProduction(y.Production);
+        }
+    }
+
     /// <summary>Tick production for all cities.</summary>
     public void TickAllProduction()
     {
         foreach (var city in _cities)
         {
             city.TickProduction();
+        }
+    }
+
+    /// <summary>Tick yield-driven production for all cities.</summary>
+    public void TickAllProduction(HexGrid grid)
+    {
+        if (grid is null) throw new ArgumentNullException(nameof(grid));
+        foreach (var city in _cities)
+        {
+            var y = YieldCalculator.Calculate(city, grid);
+            city.TickProduction(y.Production);
         }
     }
 }

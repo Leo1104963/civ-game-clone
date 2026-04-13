@@ -1,5 +1,6 @@
 using CivGame.Cities;
 using CivGame.Units;
+using CivGame.World;
 
 namespace CivGame.Core;
 
@@ -10,6 +11,7 @@ public sealed class TurnManager
 {
     private readonly UnitManager _unitManager;
     private readonly CityManager _cityManager;
+    private readonly HexGrid? _grid;
     private int _currentPlayerIndex;
 
     public int CurrentTurn { get; private set; } = 1;
@@ -31,6 +33,21 @@ public sealed class TurnManager
         _cityManager = cityManager ?? throw new ArgumentNullException(nameof(cityManager));
         if (playerOrder is null || playerOrder.Count == 0)
             throw new ArgumentException("playerOrder must be non-empty", nameof(playerOrder));
+        _grid = null;
+        PlayerOrder = playerOrder;
+        _currentPlayerIndex = 0;
+    }
+
+    public TurnManager(UnitManager unitManager, CityManager cityManager, HexGrid grid)
+        : this(unitManager, cityManager, grid, new[] { 0 }) { }
+
+    public TurnManager(UnitManager unitManager, CityManager cityManager, HexGrid grid, IReadOnlyList<int> playerOrder)
+    {
+        _unitManager = unitManager ?? throw new ArgumentNullException(nameof(unitManager));
+        _cityManager = cityManager ?? throw new ArgumentNullException(nameof(cityManager));
+        if (playerOrder is null || playerOrder.Count == 0)
+            throw new ArgumentException("playerOrder must be non-empty", nameof(playerOrder));
+        _grid = grid;
         PlayerOrder = playerOrder;
         _currentPlayerIndex = 0;
     }
@@ -47,7 +64,11 @@ public sealed class TurnManager
     {
         TurnEnding?.Invoke(CurrentTurn);
 
-        _cityManager.TickProductionFor(CurrentPlayerId);
+        if (_grid is not null)
+            _cityManager.TickProductionFor(CurrentPlayerId, _grid);
+        else
+            _cityManager.TickProductionFor(CurrentPlayerId);
+
         _unitManager.ResetMovementFor(CurrentPlayerId);
 
         _currentPlayerIndex++;

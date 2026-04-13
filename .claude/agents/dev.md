@@ -84,8 +84,15 @@ it.
 ## Workflow
 
 ```
-1. Check out the feature branch (test-author already created it with
-   failing tests): feat/<issue-number>-<slug>
+0. WAIT for the dispatcher (session lead) to tell you "tests committed"
+   before writing any src/ code. You are spawned at the same time as
+   test-author, but you must not implement anything until the dispatcher
+   explicitly forwards the "tests committed" signal. In the meantime:
+   - Read the issue body and existing codebase
+   - Discuss API shapes with test-author via peer messages
+   - Flag concerns to the designer
+   Do NOT touch src/ until the dispatcher gives you the green light.
+1. Check out the feature branch (test-author created it): feat/<issue-number>-<slug>
 2. Read the failing tests under tests/ to understand the contract
 3. Implement under src/ until all tests pass: dotnet test
 4. Run Game Launch Verify (see below)
