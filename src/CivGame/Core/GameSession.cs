@@ -15,9 +15,11 @@ public sealed class GameSession
     public UnitManager Units { get; }
     public CityManager Cities { get; }
     public TurnManager Turns { get; }
+    public VisibilityMap Visibility { get; }
 
     /// <summary>
     /// Create a fully custom game session (for testing or advanced setup).
+    /// Visibility is constructed but NOT auto-recomputed; caller owns setup.
     /// </summary>
     public GameSession(HexGrid grid, UnitManager units, CityManager cities, TurnManager turns)
     {
@@ -25,6 +27,8 @@ public sealed class GameSession
         Units = units ?? throw new ArgumentNullException(nameof(units));
         Cities = cities ?? throw new ArgumentNullException(nameof(cities));
         Turns = turns ?? throw new ArgumentNullException(nameof(turns));
+        Visibility = new VisibilityMap(grid);
+        Turns.TurnEnded += _ => Visibility.RecomputeForPlayer(Turns.CurrentPlayerId, Units, Cities);
     }
 
     /// <summary>
@@ -67,5 +71,11 @@ public sealed class GameSession
         {
             Units.CreateUnit("Settler", passableNeighbors[1], Grid, ownerId: 0);
         }
+
+        Visibility = new VisibilityMap(Grid);
+        Turns.TurnEnded += _ => Visibility.RecomputeForPlayer(Turns.CurrentPlayerId, Units, Cities);
+
+        // Initial recompute for player 0 after all units and cities are placed.
+        Visibility.RecomputeForPlayer(0, Units, Cities);
     }
 }

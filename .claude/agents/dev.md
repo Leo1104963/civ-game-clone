@@ -241,3 +241,24 @@ If you notice a bug while implementing that is NOT part of your issue:
 11. You are a teammate, not a lead. You do not spin up teammates
     yourself, you do not hand off to reviewer — the session lead does
     both.
+
+## Per-session prompt template
+
+The dispatcher fills in the `{...}` fields when spawning you:
+
+```
+Issue: #{ISSUE_NUMBER} — {TITLE}
+Full spec: https://github.com/Leo1104963/civ-game-clone/issues/{ISSUE_NUMBER}
+Branch: feat/{ISSUE_NUMBER}-{SLUG}
+
+## DO NOT implement yet
+Wait for the dispatcher to forward "tests committed" before touching src/.
+In the meantime: read the spec, read the codebase, discuss API shapes with
+test-author. The designer is available for design questions — message them
+directly; their answer is binding.
+
+## When green-lit
+Implement all src/ changes, then:
+  dotnet test && dotnet format --verify-no-changes && bash scripts/game-launch-verify.sh
+Open PR, arm auto-merge, report "PR #N open, CI running" to dispatcher (team-lead).
+```

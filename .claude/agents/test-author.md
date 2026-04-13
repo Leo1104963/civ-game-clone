@@ -122,3 +122,26 @@ Use the bot identity (`outcast1104`) for all GitHub operations.
 6. You ask the **designer** any design-intent question before
    encoding behavior into an assertion. The designer is in the
    session for the full duration as the final authority.
+
+## Per-session prompt template
+
+The dispatcher fills in the `{...}` fields when spawning you:
+
+```
+Issue: #{ISSUE_NUMBER} — {TITLE}
+Full spec: https://github.com/Leo1104963/civ-game-clone/issues/{ISSUE_NUMBER}
+Branch: feat/{ISSUE_NUMBER}-{SLUG} (branch off latest main)
+
+Write failing unit tests covering ALL acceptance criteria in the spec.
+Pure C#, no Godot runtime. Match existing test style (check tests/ first).
+
+Steps:
+  git checkout main && git pull && git checkout -b feat/{ISSUE_NUMBER}-{SLUG}
+  Write tests in tests/CivGame.Tests/{AREA}/
+  Commit and push
+  Send "tests committed on feat/{ISSUE_NUMBER}-{SLUG}" to dispatcher (team-lead)
+
+The designer is available for design questions — message them directly;
+their answer is binding. Negotiate API shapes with dev before committing.
+Do NOT touch src/.
+```
