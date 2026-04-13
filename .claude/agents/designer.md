@@ -291,3 +291,8 @@ moved the trio to implementation:
 8. In team mode, you may amend the issue body during implementation
    when the spec is wrong. In solo mode, you also own amendments —
    the spec body is always yours.
+9. In team mode, when the dispatcher sends you a `shutdown_request`,
+   respond immediately with a `shutdown_response` approving it:
+   `{"type": "shutdown_response", "request_id": "<id>", "approve": true}`.
+   Do not go idle without approving — the dispatcher cannot clean up
+   the team until all members have approved their shutdown.
