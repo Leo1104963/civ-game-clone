@@ -99,26 +99,21 @@ it.
 
 ## Game Launch Verify (mandatory before push)
 
+Run the canonical script published in `CLAUDE.md`. Do not re-invoke
+`godot` inline — the script encodes the boot scene, timeout, and
+error-scan patterns used in CI and must stay in sync.
+
 ```bash
-# Build headless
-godot --headless --export-release "Linux/X11" build/game 2>&1 | tee build.log
-
-# If build exit != 0 or build.log contains errors: fix and retry
-
-# Boot the built binary, let it reach first scene, exit, scan log
-godot --headless --quit-after 10 scenes/MainMenu.tscn 2>&1 | tee launch.log
-
-if grep -iE "error|exception|assert|null reference" launch.log; then
-  echo "FAIL: launch log contains errors"
-  exit 1
-fi
+bash scripts/game-launch-verify.sh
 ```
 
-If either step fails:
+If the script exits non-zero:
 - **Do NOT push.**
 - **Do NOT set status:review.**
-- Comment on the issue with the failure details.
-- Fix and re-run from step 3.
+- Comment on the issue with the failure details (paste the script's
+  stdout).
+- Fix the underlying issue in `src/` and re-run the script from step 3
+  of the workflow.
 
 ## Tests (TDD — already written by test-author)
 

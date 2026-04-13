@@ -69,18 +69,19 @@ gh pr checkout <PR>
 
 ### 3. Re-run Game Launch Verify independently
 
-Do not trust that CI already ran it — run it again yourself.
+Do not trust that CI already ran it — run it again yourself using the
+canonical script published in `CLAUDE.md`. Do not re-invoke `godot`
+inline; the script encodes the boot scene, timeout, and error-scan
+patterns used in CI and must stay in sync.
 
 ```bash
 dotnet test --logger "console;verbosity=minimal"
-
-godot --headless --export-release "Linux/X11" build/game 2>&1 | tee build.log
-godot --headless --quit-after 10 scenes/MainMenu.tscn 2>&1 | tee launch.log
-grep -iE "error|exception|assert|null reference" launch.log && echo "FAIL"
+bash scripts/game-launch-verify.sh
 ```
 
-If either fails: request changes with the exact failure output pasted
-into the review.
+If either command exits non-zero: request changes with the exact
+failure output (script stdout and any failed test lines) pasted into
+the review.
 
 ### 4. Review against the spec
 
