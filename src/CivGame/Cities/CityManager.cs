@@ -82,4 +82,23 @@ public sealed class CityManager
             city.TickProduction(y.Production);
         }
     }
+
+    /// <summary>
+    /// Returns the total science yield this turn for all cities owned by the given player.
+    /// Throws <see cref="ArgumentNullException"/> when grid is null.
+    /// Returns 0 when the player owns no cities.
+    /// </summary>
+    public int CalculateScienceFor(int ownerId, HexGrid grid)
+    {
+        if (grid is null) throw new ArgumentNullException(nameof(grid));
+
+        int total = 0;
+        foreach (var city in _cities)
+        {
+            if (city.OwnerId != ownerId) continue;
+            total += YieldCalculator.Calculate(city, grid).Science;
+        }
+
+        return total;
+    }
 }
