@@ -1,7 +1,7 @@
 namespace CivGame.Rendering;
 
 /// <summary>
-/// Pure helper for clamping camera position to bounds. Stub — full implementation in #92.
+/// Pure helper for clamping camera position to map bounds.
 /// </summary>
 public static class CameraClamp
 {
@@ -9,6 +9,9 @@ public static class CameraClamp
         (float X, float Y) position,
         (float MinX, float MinY, float MaxX, float MaxY) bounds)
     {
-        throw new NotImplementedException("CameraClamp not yet implemented — see issue #92.");
+        return (
+            Math.Clamp(position.X, bounds.MinX, bounds.MaxX),
+            Math.Clamp(position.Y, bounds.MinY, bounds.MaxY)
+        );
     }
 }
