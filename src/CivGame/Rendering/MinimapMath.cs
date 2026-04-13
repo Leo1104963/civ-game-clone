@@ -24,4 +24,20 @@ public static class MinimapMath
 
         return (clampedQ * cellW, clampedR * cellH, cellW, cellH);
     }
+
+    public static HexCoord MinimapToGrid(
+        (float X, float Y) pos,
+        (float W, float H) minimapSize,
+        int gridW,
+        int gridH)
+    {
+        if (minimapSize.W <= 0f || minimapSize.H <= 0f)
+            throw new ArgumentException("minimapSize must have positive width and height.");
+
+        float cellW = minimapSize.W / gridW;
+        float cellH = minimapSize.H / gridH;
+        int q = Math.Clamp((int)(pos.X / cellW), 0, gridW - 1);
+        int r = Math.Clamp((int)(pos.Y / cellH), 0, gridH - 1);
+        return new HexCoord(q, r);
+    }
 }
