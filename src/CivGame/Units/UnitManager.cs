@@ -1,3 +1,4 @@
+using CivGame.Cities;
 using CivGame.World;
 
 namespace CivGame.Units;
@@ -104,5 +105,66 @@ public sealed class UnitManager
     {
         _positionIndex.Remove(oldPosition);
         _positionIndex[newPosition] = unit;
+    }
+
+    /// <summary>
+    /// Remove a unit from the manager (e.g. a settler consumed by founding a city).
+    /// </summary>
+    internal void RemoveUnit(Unit unit)
+    {
+        _units.Remove(unit);
+        _positionIndex.Remove(unit.Position);
+    }
+
+    /// <summary>
+    /// True if founding a city at this settler's current position is currently legal.
+    /// See FoundCityWithSettler for the rule set.
+    /// </summary>
+    public bool CanFoundCity(Unit settler, CityManager cityManager, HexGrid grid)
+    {
+        if (settler is null) return false;
+        if (cityManager is null) return false;
+        if (grid is null) return false;
+
+        if (!string.Equals(settler.UnitType, "Settler", StringComparison.Ordinal)) return false;
+        if (settler.MovementRemaining != settler.MovementRange) return false;
+
+        if (!grid.InBounds(settler.Position)) return false;
+        var cell = grid.GetCell(settler.Position);
+        if (cell is null || !cell.IsPassable) return false;
+
+        if (cityManager.GetCityAt(settler.Position) is not null) return false;
+
+        foreach (var city in cityManager.AllCities)
+        {
+            if (settler.Position.DistanceTo(city.Position) <= 2) return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Found a new city at the settler's position, consuming the settler.
+    /// Returns the new City on success, or null if rules fail.
+    /// </summary>
+    public City? FoundCityWithSettler(Unit settler, string cityName, CityManager cityManager, HexGrid grid)
+    {
+        if (!CanFoundCity(settler, cityManager, grid)) return null;
+        if (string.IsNullOrWhiteSpace(cityName)) return null;
+
+        var position = settler.Position;
+        RemoveUnit(settler);
+
+        try
+        {
+            return cityManager.CreateCity(cityName, position, grid);
+        }
+        catch
+        {
+            // If creation fails unexpectedly, restore the settler so state stays consistent.
+            _units.Add(settler);
+            _positionIndex[position] = settler;
+            throw;
+        }
     }
 }

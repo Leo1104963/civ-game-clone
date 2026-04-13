@@ -35,4 +35,17 @@ public class UnitRenderer
         // In Godot context, the Node2D wrapper calls QueueRedraw().
         // In test context, this is a no-op.
     }
+
+    /// <summary>
+    /// Resolve the fill color for a unit by its UnitType string.
+    /// </summary>
+    public static (float R, float G, float B) GetUnitColor(string unitType)
+    {
+        return unitType switch
+        {
+            "Warrior" => (0.80f, 0.20f, 0.20f), // red
+            "Settler" => (0.95f, 0.95f, 0.95f), // near-white
+            _ => (0.50f, 0.50f, 0.50f),          // grey fallback
+        };
+    }
 }

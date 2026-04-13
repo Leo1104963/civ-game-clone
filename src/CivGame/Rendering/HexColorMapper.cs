@@ -15,8 +15,11 @@ public static class HexColorMapper
     {
         return terrain switch
         {
-            TerrainType.Grass => (0.3f, 0.7f, 0.2f),
-            _ => (0.5f, 0.5f, 0.5f),
+            TerrainType.Grass => (0.30f, 0.70f, 0.20f),
+            TerrainType.Plains => (0.80f, 0.75f, 0.35f),
+            TerrainType.Forest => (0.15f, 0.45f, 0.15f),
+            TerrainType.Water => (0.20f, 0.45f, 0.85f),
+            _ => (0.50f, 0.50f, 0.50f),
         };
     }
 
