@@ -63,12 +63,12 @@ public class GameSessionTests
     {
         var session = new GameSession(10, 10);
 
-        Assert.Single(session.Units.AllUnits);
-        var unit = session.Units.AllUnits[0];
-        Assert.Equal("Warrior", unit.UnitType);
+        // #53: bootstrap now places Warrior + Settler, so AllUnits.Count is 2.
+        var unit = session.Units.AllUnits.FirstOrDefault(u => u.UnitType == "Warrior");
+        Assert.NotNull(unit);
 
         var city = session.Cities.AllCities[0];
-        Assert.Equal(1, city.Position.DistanceTo(unit.Position));
+        Assert.Equal(1, city.Position.DistanceTo(unit!.Position));
     }
 
     [Fact]
