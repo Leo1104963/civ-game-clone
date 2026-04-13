@@ -17,9 +17,9 @@ public static class TileRenderStateResolver
 
         return state switch
         {
-            VisibilityState.Visible  => TileRenderState.Full,
+            VisibilityState.Visible => TileRenderState.Full,
             VisibilityState.Explored => TileRenderState.Dim,
-            _                        => TileRenderState.Hidden,
+            _ => TileRenderState.Hidden,
         };
     }
 }
