@@ -1,4 +1,5 @@
 using CivGame.Cities;
+using CivGame.Combat;
 using CivGame.World;
 
 namespace CivGame.Units;
@@ -123,6 +124,52 @@ public sealed class UnitManager
     {
         _positionIndex.Remove(oldPosition);
         _positionIndex[newPosition] = unit;
+    }
+
+    /// <summary>
+    /// Attempt a melee attack from attacker's current position against a target coord.
+    /// Preconditions: target is an adjacent occupied hex whose unit has a different OwnerId,
+    ///                attacker has MovementRemaining > 0 and CombatStrength > 0.
+    /// On success: CombatResolver is invoked, both units' Hp updated, any dead unit is
+    /// removed from the manager. Attacker spends 1 MovementRemaining regardless of outcome.
+    /// Returns the CombatResult, or null if preconditions fail.
+    /// </summary>
+    public CombatResult? TryAttack(Unit attacker, HexCoord targetCoord, HexGrid grid)
+    {
+        if (attacker is null) return null;
+        if (grid is null) return null;
+        if (attacker.CombatStrength <= 0) return null;
+        if (attacker.MovementRemaining <= 0) return null;
+        if (attacker.IsDead) return null;
+
+        // Target must be an adjacent hex.
+        bool adjacent = false;
+        foreach (var n in attacker.Position.Neighbors())
+        {
+            if (n == targetCoord) { adjacent = true; break; }
+        }
+        if (!adjacent) return null;
+
+        if (!grid.InBounds(targetCoord)) return null;
+        var cell = grid.GetCell(targetCoord);
+        if (cell is null) return null;
+
+        var defender = GetUnitAt(targetCoord);
+        if (defender is null) return null;
+        if (defender.OwnerId == attacker.OwnerId) return null;
+
+        var result = CombatResolver.Resolve(attacker, defender, cell.Terrain);
+
+        attacker.Hp = result.AttackerHpAfter;
+        defender.Hp = result.DefenderHpAfter;
+
+        // Attacker always pays 1 movement for the attack itself, clamped to 0.
+        attacker.MovementRemaining = Math.Max(0, attacker.MovementRemaining - 1);
+
+        if (result.AttackerKilled) RemoveUnit(attacker);
+        if (result.DefenderKilled) RemoveUnit(defender);
+
+        return result;
     }
 
     /// <summary>

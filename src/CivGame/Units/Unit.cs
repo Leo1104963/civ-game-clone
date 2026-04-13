@@ -19,6 +19,10 @@ public sealed class Unit
     public int MovementRemaining { get; internal set; }
     public bool CanMove => MovementRemaining > 0;
     public int OwnerId { get; }
+    public int MaxHp { get; }
+    public int Hp { get; internal set; }
+    public int CombatStrength { get; }
+    public bool IsDead => Hp <= 0;
 
     public Unit(string unitType, HexCoord position, int movementRange, int ownerId = 0)
     {
@@ -28,6 +32,13 @@ public sealed class Unit
         MovementRange = movementRange;
         MovementRemaining = movementRange;
         OwnerId = ownerId;
+        (MaxHp, CombatStrength) = unitType switch
+        {
+            "Warrior" => (10, 5),
+            "Settler" => (5, 0),
+            _ => (10, 0),
+        };
+        Hp = MaxHp;
     }
 
     /// <summary>
