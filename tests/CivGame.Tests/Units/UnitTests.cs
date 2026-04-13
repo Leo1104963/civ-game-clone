@@ -150,7 +150,7 @@ public class UnitTests
     public void Should_ReturnFalse_When_TargetIsImpassable()
     {
         var grid = new HexGrid(5, 5);
-        grid.GetCell(new HexCoord(3, 2))!.IsPassable = false;
+        grid.GetCell(new HexCoord(3, 2))!.Terrain = TerrainType.Water;
         var manager = new UnitManager();
         var unit = manager.CreateUnit("Warrior", new HexCoord(2, 2), grid);
 
@@ -235,7 +235,7 @@ public class UnitTests
         var manager = new UnitManager();
 
         // Block (3,2) so unit at (2,2) must go around to reach (4,2)
-        grid.GetCell(new HexCoord(3, 2))!.IsPassable = false;
+        grid.GetCell(new HexCoord(3, 2))!.Terrain = TerrainType.Water;
 
         var unit = manager.CreateUnit("Warrior", new HexCoord(2, 2), grid);
 

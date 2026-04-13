@@ -404,11 +404,11 @@ public class HexGridTests
     }
 
     [Fact]
-    public void Should_AllowPassabilityChange_When_IsPassableSet()
+    public void Should_ReflectImpassability_When_TerrainSetToWater()
     {
         var grid = new HexGrid(3, 3);
         var cell = grid.GetCell(new HexCoord(1, 1))!;
-        cell.IsPassable = false;
+        cell.Terrain = TerrainType.Water;
         Assert.False(cell.IsPassable);
     }
 }

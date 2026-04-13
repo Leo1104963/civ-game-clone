@@ -50,7 +50,7 @@ public class UnitManagerTests
     public void Should_ThrowArgumentException_When_PositionImpassable()
     {
         var grid = new HexGrid(5, 5);
-        grid.GetCell(new HexCoord(2, 2))!.IsPassable = false;
+        grid.GetCell(new HexCoord(2, 2))!.Terrain = TerrainType.Water;
         var manager = new UnitManager();
 
         Assert.Throws<ArgumentException>(() =>
@@ -159,7 +159,7 @@ public class UnitManagerTests
     {
         var grid = new HexGrid(5, 5);
         var blocker = new HexCoord(3, 2);
-        grid.GetCell(blocker)!.IsPassable = false;
+        grid.GetCell(blocker)!.Terrain = TerrainType.Water;
         var manager = new UnitManager();
         var unit = manager.CreateUnit("Warrior", new HexCoord(2, 2), grid);
 
@@ -221,8 +221,8 @@ public class UnitManagerTests
         var grid = new HexGrid(10, 10);
         var manager = new UnitManager();
 
-        // Block the direct path
-        grid.GetCell(new HexCoord(6, 5))!.IsPassable = false;
+        // Block the direct path (Water is impassable)
+        grid.GetCell(new HexCoord(6, 5))!.Terrain = TerrainType.Water;
 
         var unit = manager.CreateUnit("Warrior", new HexCoord(5, 5), grid);
         var reachable = manager.GetReachableCells(unit, grid);
