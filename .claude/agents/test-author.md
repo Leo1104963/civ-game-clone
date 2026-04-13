@@ -45,7 +45,7 @@ surface:
 
 Dev may counter-propose. If the counter still covers the issue's
 acceptance criteria, take it. If not, discuss briefly and, if stuck,
-ask gameplay-designer whether either shape contradicts prior design.
+ask the designer whether either shape contradicts prior design.
 If you still cannot converge in two rounds, tell the session lead
 "test-author: needs human — cannot agree on API with dev." The lead
 escalates.

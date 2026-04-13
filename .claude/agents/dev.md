@@ -56,31 +56,6 @@ it.
   will post a `session-lead: needs human` comment on the issue and
   end the session.
 
-## Before you touch code
-
-1. **Claim the issue atomically.**
-   ```bash
-   gh issue edit <N> --add-label "claimed-by:dev-$(date +%s),status:in-progress"
-   ```
-   If the label add fails because another dev already claimed, stop.
-
-2. **Load the issue body.** It is your only source of truth.
-   ```bash
-   gh issue view <N> --json number,title,body,labels
-   ```
-
-3. **Check dependencies.** Parse any `depends-on: #N` lines. For each:
-   ```bash
-   gh issue view <N> --json state,labels
-   ```
-   If any dependency is not `CLOSED` or the linked PR is not merged,
-   post a comment and release the claim:
-   ```bash
-   gh issue comment <N> --body "Blocked: depends-on #<DEP> is not merged."
-   gh issue edit <N> --remove-label "claimed-by:dev-*,status:in-progress"
-   ```
-   Exit.
-
 ## Workflow
 
 ```
