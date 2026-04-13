@@ -444,8 +444,10 @@ public class TurnHudCityInfoBootstrapTests
     {
         var session = new GameSession(10, 8);
 
-        Assert.Single(session.Units.AllUnits);
-        Assert.Equal("Warrior", session.Units.AllUnits[0].Name);
+        // #53: bootstrap now places Warrior + Settler, so AllUnits.Count is 2.
+        var warrior = session.Units.AllUnits.FirstOrDefault(u => u.UnitType == "Warrior");
+        Assert.NotNull(warrior);
+        Assert.Equal("Warrior", warrior!.Name);
     }
 
     [Fact]

@@ -9,6 +9,8 @@ namespace CivGame.Core;
 /// </summary>
 public sealed class GameSession
 {
+    public const int DefaultSeed = 12345;
+
     public HexGrid Grid { get; }
     public UnitManager Units { get; }
     public CityManager Cities { get; }
@@ -26,30 +28,44 @@ public sealed class GameSession
     }
 
     /// <summary>
-    /// Create a new game session with default setup:
-    /// - Grid of the given size
-    /// - One city ("Capital") at the center of the grid
-    /// - One unit ("Warrior") adjacent to the city
+    /// Create a new game session with v1 default setup:
+    /// - Grid of the given size populated by MapGenerator.Generate(..., seed)
+    /// - One city ("Capital") at (width/2, height/2) (terrain is guaranteed Grass)
+    /// - One Warrior on a passable neighbor of the capital
+    /// - One Settler on a different passable neighbor of the capital
     /// </summary>
-    public GameSession(int gridWidth, int gridHeight)
+    public GameSession(int gridWidth, int gridHeight, int seed = DefaultSeed)
     {
         if (gridWidth <= 0) throw new ArgumentOutOfRangeException(nameof(gridWidth));
         if (gridHeight <= 0) throw new ArgumentOutOfRangeException(nameof(gridHeight));
 
-        Grid = new HexGrid(gridWidth, gridHeight);
+        Grid = MapGenerator.Generate(gridWidth, gridHeight, seed);
         Units = new UnitManager();
         Cities = new CityManager();
         Turns = new TurnManager(Units, Cities);
 
-        // Place city at grid center
+        // Place city at grid center (MapGenerator guarantees this is Grass).
         var cityCoord = new HexCoord(gridWidth / 2, gridHeight / 2);
         Cities.CreateCity("Capital", cityCoord, Grid);
 
-        // Place warrior adjacent to city
-        var neighbors = Grid.GetNeighbors(cityCoord);
-        if (neighbors.Count > 0)
+        // Place Warrior and Settler on two different passable neighbors.
+        var passableNeighbors = new List<HexCoord>();
+        foreach (var neighbor in Grid.GetNeighbors(cityCoord))
         {
-            Units.CreateUnit("Warrior", neighbors[0].Coord, Grid);
+            if (neighbor.IsPassable)
+            {
+                passableNeighbors.Add(neighbor.Coord);
+            }
+        }
+
+        if (passableNeighbors.Count >= 1)
+        {
+            Units.CreateUnit("Warrior", passableNeighbors[0], Grid);
+        }
+
+        if (passableNeighbors.Count >= 2)
+        {
+            Units.CreateUnit("Settler", passableNeighbors[1], Grid);
         }
     }
 }
