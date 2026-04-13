@@ -1,3 +1,4 @@
+using CivGame.Combat;
 using CivGame.Units;
 
 namespace CivGame.Rendering.Tests;
