@@ -4,24 +4,43 @@ using CivGame.World;
 namespace CivGame.Rendering;
 
 /// <summary>
-/// Draws a HexGrid as colored flat-top hexagons.
+/// Draws a HexGrid as colored flat-top hexagons, with optional fog-of-war.
 /// Attach this as a child of a Node2D in the scene tree.
 /// </summary>
 public partial class HexGridRenderer : Node2D
 {
     private HexGrid? _grid;
+    private VisibilityMap? _visibility;
+    private int _viewerOwnerId;
 
     [Export]
     public float HexSize { get; set; } = 40f;
 
-    private static readonly Color GrassColor = new(0.3f, 0.7f, 0.2f);
-    private static readonly Color GridLineColor = new(0.2f, 0.5f, 0.15f);
+    [Export]
+    public bool FogOfWarEnabled { get; set; } = true;
 
     /// <summary>Bind to a HexGrid data model and trigger redraw.</summary>
-    public void Initialize(HexGrid grid)
+    public void Initialize(HexGrid grid, VisibilityMap? visibility = null, int viewerOwnerId = 0)
     {
         _grid = grid;
+        _visibility = visibility;
+        _viewerOwnerId = viewerOwnerId;
         QueueRedraw();
+    }
+
+    /// <summary>
+    /// Returns the render state for a given coord. Returns Hidden for out-of-bounds.
+    /// When no VisibilityMap is bound or FogOfWarEnabled is false, returns Full for all in-bounds coords.
+    /// </summary>
+    public TileRenderState GetTileRenderState(HexCoord coord)
+    {
+        if (_grid is null || !_grid.InBounds(coord))
+            return TileRenderState.Hidden;
+
+        if (_visibility is null || !FogOfWarEnabled)
+            return TileRenderState.Full;
+
+        return TileRenderStateResolver.Resolve(_visibility.IsAt(_viewerOwnerId, coord), FogOfWarEnabled);
     }
 
     public override void _Draw()
@@ -31,24 +50,28 @@ public partial class HexGridRenderer : Node2D
         foreach (var cell in _grid.AllCells())
         {
             var (px, py) = HexGrid.HexToPixel(cell.Coord, HexSize);
-            var center = new Vector2(px, py);
             var vertices = HexVertexCalculator.GetHexVertices(px, py, HexSize);
 
-            // Build a Vector2 array for the polygon
             var polyVerts = new Vector2[vertices.Length];
             for (int i = 0; i < vertices.Length; i++)
-            {
                 polyVerts[i] = new Vector2(vertices[i].X, vertices[i].Y);
+
+            var renderState = GetTileRenderState(cell.Coord);
+
+            if (renderState == TileRenderState.Hidden)
+            {
+                var (fr, fg, fb) = FogOfWarConstants.FogOfWarColor;
+                DrawColoredPolygon(polyVerts, new Color(fr, fg, fb));
+                // Skip grid line for hidden tiles
+                continue;
             }
 
-            // Determine fill color from terrain
             var (r, g, b) = HexColorMapper.GetTerrainColor(cell.Terrain);
-            var fillColor = new Color(r, g, b);
+            if (renderState == TileRenderState.Dim)
+                (r, g, b) = HexColorMapper.Dim((r, g, b), FogOfWarConstants.DefaultDimFactor);
 
-            // Fill
-            DrawColoredPolygon(polyVerts, fillColor);
+            DrawColoredPolygon(polyVerts, new Color(r, g, b));
 
-            // Outline
             var (lr, lg, lb) = HexColorMapper.GetGridLineColor();
             var lineColor = new Color(lr, lg, lb);
             for (int i = 0; i < polyVerts.Length; i++)
@@ -64,7 +87,6 @@ public partial class HexGridRenderer : Node2D
     {
         if (_grid is null) return null;
 
-        // Convert screen position to local position (accounts for camera/transform)
         var localPos = ToLocal(screenPos);
         var coord = HexGrid.PixelToHex(localPos.X, localPos.Y, HexSize);
 
