@@ -46,6 +46,8 @@ public class ResearchManagerTests
     [Fact]
     public void Should_AccumulateScience_When_TickForCalledMultipleTimes()
     {
+        // pottery costs 20. Tick 1: acc=10. Tick 2: acc=20 → completes, carry-over=0.
+        // Tick 3: acc=10 (no current research, pools). Final accumulated = 10.
         var manager = CreateManager();
         manager.StartResearch(PlayerId, "pottery");
 
@@ -53,7 +55,7 @@ public class ResearchManagerTests
         manager.TickFor(PlayerId, 10);
         manager.TickFor(PlayerId, 10);
 
-        Assert.Equal(30, manager.GetAccumulatedScience(PlayerId));
+        Assert.Equal(10, manager.GetAccumulatedScience(PlayerId));
     }
 
     // ------------------------------------------------------------------ //
@@ -433,10 +435,10 @@ public class ResearchManagerTests
     {
         var manager = CreateManager();
         manager.StartResearch(PlayerId, "pottery");
-        manager.StartResearch(OtherPlayerId, "animal-husbandry");
+        manager.StartResearch(OtherPlayerId, "writing");
 
         Assert.Equal("pottery", manager.GetCurrentResearch(PlayerId)!.Id);
-        Assert.Equal("animal-husbandry", manager.GetCurrentResearch(OtherPlayerId)!.Id);
+        Assert.Equal("writing", manager.GetCurrentResearch(OtherPlayerId)!.Id);
     }
 
     // ------------------------------------------------------------------ //

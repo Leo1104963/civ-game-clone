@@ -10,27 +10,27 @@ public static class TechCatalog
     // ------------------------------------------------------------------ //
 
     public static Technology Pottery { get; } = new(
-        "pottery", "Pottery", 40, unlocks: new[] { "Granary" });
+        "pottery", "Pottery", 20, unlocks: new[] { "Granary" });
 
     public static Technology BronzeWorking { get; } = new(
-        "bronze-working", "Bronze Working", 40, unlocks: new[] { "Spearman" });
+        "bronze-working", "Bronze Working", 25, unlocks: new[] { "Spearman" });
 
-    public static Technology AnimalHusbandry { get; } = new(
-        "animal-husbandry", "Animal Husbandry", 40, unlocks: new[] { "Scout" });
+    public static Technology Writing { get; } = new(
+        "writing", "Writing", 30, unlocks: new[] { "Library" });
 
     public static Technology Masonry { get; } = new(
-        "masonry", "Masonry", 40, unlocks: new[] { "Walls" });
+        "masonry", "Masonry", 30, unlocks: new[] { "Walls" });
+
+    public static Technology Archery { get; } = new(
+        "archery", "Archery", 25, unlocks: new[] { "Archer" });
 
     public static Technology Currency { get; } = new(
-        "currency", "Currency", 60,
+        "currency", "Currency", 40,
         prerequisites: new[] { "bronze-working" },
         unlocks: new[] { "Market" });
 
-    public static Technology Sailing { get; } = new(
-        "sailing", "Sailing", 40, unlocks: new[] { "Galley" });
-
     public static Technology Mathematics { get; } = new(
-        "mathematics", "Mathematics", 80,
+        "mathematics", "Mathematics", 50,
         prerequisites: new[] { "currency", "masonry" },
         unlocks: new[] { "Catapult" });
 
@@ -42,10 +42,10 @@ public static class TechCatalog
     {
         Pottery,
         BronzeWorking,
-        AnimalHusbandry,
+        Writing,
         Masonry,
+        Archery,
         Currency,
-        Sailing,
         Mathematics,
     };
 

@@ -35,10 +35,10 @@ public class TechCatalogTests
     [Theory]
     [InlineData("pottery")]
     [InlineData("bronze-working")]
-    [InlineData("animal-husbandry")]
+    [InlineData("writing")]
     [InlineData("masonry")]
     [InlineData("currency")]
-    [InlineData("sailing")]
+    [InlineData("archery")]
     [InlineData("mathematics")]
     public void Should_ReturnNonNullTech_When_GetByIdCalledWithKnownId(string id)
     {
@@ -133,7 +133,7 @@ public class TechCatalogTests
     [Theory]
     [InlineData("pottery")]
     [InlineData("bronze-working")]
-    [InlineData("animal-husbandry")]
+    [InlineData("archery")]
     public void Should_HaveNoPrerequisites_When_EarlyTechInspected(string id)
     {
         var tech = TechCatalog.GetById(id);

@@ -20,13 +20,6 @@ public sealed class ResearchManager
     /// </summary>
     public ResearchManager() { }
 
-    /// <summary>
-    /// Creates a ResearchManager pre-loaded with a specific catalog.
-    /// The catalog parameter is accepted for future extensibility but the
-    /// current implementation always resolves techs via <see cref="TechCatalog.GetById"/>.
-    /// </summary>
-    public ResearchManager(IReadOnlyList<Technology> catalog) { }
-
     // ------------------------------------------------------------------ //
     // Event                                                               //
     // ------------------------------------------------------------------ //
