@@ -115,21 +115,14 @@ Scenario: <scenario>
 Full log: tests/results/<scenario>.log"
 ```
 
-## Scenario catalog (bootstrap)
-
-Start with one scenario. Grow the catalog as the game grows.
+## Scenario catalog
 
 - `smoke-boot` — build, boot to main menu, quit cleanly. No game logic.
-- `10-turn-hotseat` — start a 2-player hotseat game, play 10 turns with
-  random moves, assert no exceptions.
-- `50-turn-aivai` — start a 2-AI game on a fixed-seed map, play 50
-  turns, assert no exceptions and save/load roundtrip at turn 25.
-- `save-roundtrip` — save mid-game, load, deep-compare state, assert
-  identical.
 
-Each scenario's C# entry point sets up state, runs the loop, and exits
-with code 0 on pass, non-zero on fail. Scenarios are implemented by the
-dev agent from stories the designer writes.
+New scenarios are added by the designer as stories when the gameplay
+features they exercise are implemented. Each scenario's C# entry point
+sets up state, runs the loop, and exits with code 0 on pass, non-zero
+on fail.
 
 ## Fixed seeds
 
