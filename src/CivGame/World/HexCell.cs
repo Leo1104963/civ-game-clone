@@ -1,18 +1,19 @@
 namespace CivGame.World;
 
 /// <summary>
-/// A single cell in the hex grid. Holds terrain and passability.
+/// A single cell in the hex grid. Passability is derived from terrain via TerrainRules.
 /// </summary>
 public sealed class HexCell
 {
     public HexCoord Coord { get; }
     public TerrainType Terrain { get; set; }
-    public bool IsPassable { get; set; }
 
-    public HexCell(HexCoord coord, TerrainType terrain = TerrainType.Grass, bool isPassable = true)
+    /// <summary>True if the cell's terrain is passable. Derived from TerrainRules.</summary>
+    public bool IsPassable => TerrainRules.IsPassable(Terrain);
+
+    public HexCell(HexCoord coord, TerrainType terrain = TerrainType.Grass)
     {
         Coord = coord;
         Terrain = terrain;
-        IsPassable = isPassable;
     }
 }
