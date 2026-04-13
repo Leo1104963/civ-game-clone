@@ -43,6 +43,16 @@ public sealed class City
     }
 
     /// <summary>
+    /// Directly add a completed building to this city. Intended for testing and save-load.
+    /// Throws if building is null. Does not validate for duplicates (use HasBuilding to check).
+    /// </summary>
+    public void AddCompletedBuilding(BuildingDefinition building)
+    {
+        if (building is null) throw new ArgumentNullException(nameof(building));
+        _completedBuildings.Add(building);
+    }
+
+    /// <summary>
     /// Start building. Returns false if already building something or building already completed.
     /// </summary>
     public bool StartBuilding(BuildingDefinition building)
