@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://src/CivGame/Rendering/GameController.cs" id="1"]
 [ext_resource type="Script" path="res://src/CivGame/Rendering/HexGridRenderer.cs" id="2"]
@@ -8,6 +8,7 @@
 [ext_resource type="Script" path="res://src/CivGame/Rendering/InputHandlerNode.cs" id="6"]
 [ext_resource type="Script" path="res://src/CivGame/Rendering/TurnHud.cs" id="7"]
 [ext_resource type="Script" path="res://src/CivGame/Rendering/CityInfoPanel.cs" id="8"]
+[ext_resource type="Script" path="res://src/CivGame/Rendering/SelectedUnitPanel.cs" id="9"]
 
 [node name="GameScene" type="Node2D"]
 script = ExtResource("1")
@@ -88,3 +89,36 @@ offset_top = 110.0
 offset_right = 250.0
 offset_bottom = 145.0
 text = "Build Granary"
+
+[node name="SelectedUnitPanel" type="Control" parent="CanvasLayer"]
+script = ExtResource("9")
+visible = false
+layout_mode = 3
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = -160.0
+offset_right = 260.0
+offset_bottom = -10.0
+
+[node name="UnitNameLabel" type="Label" parent="CanvasLayer/SelectedUnitPanel"]
+layout_mode = 0
+offset_right = 250.0
+offset_bottom = 30.0
+text = "Unit Name"
+
+[node name="UnitDetailsLabel" type="Label" parent="CanvasLayer/SelectedUnitPanel"]
+layout_mode = 0
+offset_top = 35.0
+offset_right = 250.0
+offset_bottom = 90.0
+text = "Position: (0,0)\nMovement: 2/2"
+
+[node name="FoundCityButton" type="Button" parent="CanvasLayer/SelectedUnitPanel"]
+visible = false
+layout_mode = 0
+offset_top = 100.0
+offset_right = 250.0
+offset_bottom = 135.0
+text = "Found City"
