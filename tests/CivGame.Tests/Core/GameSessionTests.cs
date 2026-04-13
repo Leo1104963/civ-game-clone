@@ -165,7 +165,9 @@ public class GameSessionTests
     {
         var session = new GameSession(10, 10);
 
-        session.Turns.EndTurn();
+        // With 2-player order [0, 1], one full game turn requires two EndTurn calls.
+        session.Turns.EndTurn(); // player 0 ends
+        session.Turns.EndTurn(); // player 1 (barbarian) ends → CurrentTurn advances to 2
 
         Assert.Equal(2, session.Turns.CurrentTurn);
     }
