@@ -46,7 +46,7 @@ public sealed class GameSession
 
         // Place city at grid center (MapGenerator guarantees this is Grass).
         var cityCoord = new HexCoord(gridWidth / 2, gridHeight / 2);
-        Cities.CreateCity("Capital", cityCoord, Grid);
+        Cities.CreateCity("Capital", cityCoord, Grid, ownerId: 0);
 
         // Place Warrior and Settler on two different passable neighbors.
         var passableNeighbors = new List<HexCoord>();
@@ -60,12 +60,12 @@ public sealed class GameSession
 
         if (passableNeighbors.Count >= 1)
         {
-            Units.CreateUnit("Warrior", passableNeighbors[0], Grid);
+            Units.CreateUnit("Warrior", passableNeighbors[0], Grid, ownerId: 0);
         }
 
         if (passableNeighbors.Count >= 2)
         {
-            Units.CreateUnit("Settler", passableNeighbors[1], Grid);
+            Units.CreateUnit("Settler", passableNeighbors[1], Grid, ownerId: 0);
         }
     }
 }

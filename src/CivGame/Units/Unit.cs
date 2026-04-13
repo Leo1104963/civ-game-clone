@@ -18,14 +18,16 @@ public sealed class Unit
     public int MovementRange { get; }
     public int MovementRemaining { get; internal set; }
     public bool CanMove => MovementRemaining > 0;
+    public int OwnerId { get; }
 
-    public Unit(string unitType, HexCoord position, int movementRange)
+    public Unit(string unitType, HexCoord position, int movementRange, int ownerId = 0)
     {
         Id = Interlocked.Increment(ref _nextId);
         UnitType = unitType;
         Position = position;
         MovementRange = movementRange;
         MovementRemaining = movementRange;
+        OwnerId = ownerId;
     }
 
     /// <summary>

@@ -14,10 +14,11 @@ public sealed class City
     public int Id { get; }
     public string Name { get; }
     public HexCoord Position { get; }
+    public int OwnerId { get; }
     public BuildQueueItem? CurrentProduction { get; private set; }
     public IReadOnlyList<BuildingDefinition> CompletedBuildings => _completedBuildings.AsReadOnly();
 
-    public City(string name, HexCoord position)
+    public City(string name, HexCoord position, int ownerId = 0)
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new ArgumentException("City name cannot be empty.", nameof(name));
@@ -25,6 +26,7 @@ public sealed class City
         Id = Interlocked.Increment(ref _nextId);
         Name = name;
         Position = position;
+        OwnerId = ownerId;
     }
 
     /// <summary>True if the building is already completed or currently in production.</summary>
