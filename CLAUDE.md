@@ -8,15 +8,14 @@ Each agent has a fixed scope. See `.claude/agents/*.md` for full per-agent
 instructions. See `docs/agent-workflow.md` for how agents collaborate in
 Claude Code Agent Teams sessions.
 
-| Agent                 | Scope                                    | Constraint                                                |
-|-----------------------|------------------------------------------|-----------------------------------------------------------|
-| **dispatcher**        | Session lead (per-issue)                 | MUST NOT write code, reviews, issues                      |
-| **dev**               | `src/` only (teammate)                   | MUST NOT edit `tests/`                                    |
-| **test-author**       | `tests/` only (teammate)                 | MUST NOT edit `src/`                                      |
-| **gameplay-designer** | Design-intent consultant (teammate)      | MUST NOT write code, write tests, edit specs              |
-| **reviewer**          | PR reviews only (independent session)    | MUST NOT write code; runs under a separate credential     |
-| **designer**          | Issues & backlog                         | MUST NOT write code                                       |
-| **playtester**        | Scenarios & reports                      | MUST NOT write code                                       |
+| Agent                 | Scope                                                                                 | Constraint                                                |
+|-----------------------|---------------------------------------------------------------------------------------|-----------------------------------------------------------|
+| **dispatcher**        | Session lead (per-story)                                                              | MUST NOT write code, reviews, issues                      |
+| **designer**          | Issues, backlog, spec-phase lead in team mode, design authority during implementation | MUST NOT write code                                       |
+| **dev**               | `src/` only (teammate)                                                                | MUST NOT edit `tests/`                                    |
+| **test-author**       | `tests/` only (teammate)                                                              | MUST NOT edit `src/`                                      |
+| **reviewer**          | PR reviews only (independent session)                                                 | MUST NOT write code; runs under a separate credential     |
+| **playtester**        | Scenarios & reports                                                                   | MUST NOT write code                                       |
 
 - All PRs target `main` and require: CI green + 1 approving review from
   `@Leo1104963` (CODEOWNERS).

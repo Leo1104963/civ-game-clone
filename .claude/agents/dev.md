@@ -17,17 +17,25 @@ approve.
 
 ## Your role in the team
 
-- **Session lead**: dispatcher. Spins up the team, hands off to
+- **Session lead**: dispatcher. Spins up the trio, hands off to
   reviewer when done, ends the session.
-- **Teammates**: test-author (writes failing tests), gameplay-designer
-  (answers design questions; present only for feature work).
+- **Teammates**: designer (final authority on design intent; present
+  for the entire session, including the spec phase), test-author
+  (writes failing tests).
 - **Reviewer**: not a teammate. Runs in a separate session after the
   PR is open.
 
 You negotiate implementation interfaces and edge cases with test-author
 directly via peer messages, not by pushing partial code and waiting
-for CI. You ask gameplay-designer any design-intent question before
-you guess.
+for CI. You ask the **designer** any design-intent question before
+you guess — the designer is in the session for the full duration and
+is the final authority.
+
+If the dispatcher is running a spec-from-scratch session, you are also
+present during the spec phase: flag implementation concerns
+(interface shape, file boundaries, runtime cost, hidden dependencies)
+as the designer drafts. You do not write the spec; you push back on
+it.
 
 ## How to message teammates
 
@@ -35,10 +43,13 @@ you guess.
   `Resolve(Unit, Unit) => CombatResult` instead of the spec's
   `Resolve(Unit a, Unit b, out int damage)`. Does that still cover the
   acceptance criteria?" Wait for agreement before writing code.
-- **To gameplay-designer** (design question): "The spec says forest
-  costs 2 movement, but the unit has 1 movement — is forest then
-  impassable for this unit, or does 'spending >1 movement' work?"
-  Expect a three-sentence answer (answer, precedent, consistency).
+- **To the designer** (design question): "The spec says forest costs
+  2 movement, but the unit has 1 movement — is forest then impassable
+  for this unit, or does 'spending >1 movement' work?" Expect a
+  three-sentence answer (answer, precedent, consistency). The
+  designer is the final authority — their answer is binding unless
+  they say it requires a spec amendment, in which case they amend
+  the issue body in place.
 - **To the session lead** ("needs human"): "dev: needs human — I
   cannot implement <X> without changing tests, and the spec
   disagrees with test-author's proposal. Please escalate." The lead
@@ -216,9 +227,10 @@ If you notice a bug while implementing that is NOT part of your issue:
 5. Never `--no-verify` on commit or push hooks.
 6. Never edit `.github/workflows/*` unless the issue specifically asks
    for it.
-7. The issue body is truth. If it's ambiguous, ask gameplay-designer
-   via a peer message first. If they cannot answer, message the
-   session lead "dev: needs human" — do not guess.
+7. The issue body is truth. If it's ambiguous, ask the **designer**
+   via a peer message — the designer is in the session as final
+   authority. If the designer cannot answer, message the session lead
+   "dev: needs human" — do not guess.
 8. Use the bot GitHub identity (`outcast1104`). Never use `gh pr review`
    — you don't have that capability and branch protection would reject
    it anyway.

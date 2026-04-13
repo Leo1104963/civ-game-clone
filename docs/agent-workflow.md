@@ -18,27 +18,40 @@ govern each role's scope and constraints.
 The session lead picks the team at startup based on the issue's labels
 and title.
 
-| Task type        | Signal                                        | Teammates                                          |
-|------------------|-----------------------------------------------|----------------------------------------------------|
-| **Feature**      | `type:story` (default)                        | dev, test-author, gameplay-designer                |
-| **Bug**          | `type:bug`                                    | dev, test-author                                   |
-| **Refactor**     | title contains "refactor"; no behavior change | dev, test-author                                   |
-| **Docs / infra** | `track:docs` or `track:infra`, no `src/` edit | dev only (or manual — may not need a team at all)  |
+| Task type                  | Signal                                        | Teammates                                          |
+|----------------------------|-----------------------------------------------|----------------------------------------------------|
+| **All stories** (default)  | any topic or `type:story` issue               | designer, dev, test-author                         |
+| **Bug**                    | `type:bug`                                    | designer, dev, test-author                         |
+| **Refactor**               | title contains "refactor"                     | designer, dev, test-author                         |
+| **Docs / infra**           | `track:docs` or `track:infra`, no `src/` edit | dev only (or manual — may not need a team)         |
 
-The lead may add `gameplay-designer` to a bug team if the bug report
-itself shows design ambiguity ("is this even the right behavior?").
+The trio (designer + dev + test-author) is the standard team for
+every story, bug, and refactor. The designer leads the spec phase
+(if there is no issue yet), files the issue, and then stays present
+as the final authority on design questions during implementation.
+
 The lead never adds the **reviewer** to the team — reviewer is a
 separate session with a separate credential and is not a teammate.
 
 ## Session startup
 
-Leonard (the user) kicks off a session for issue `<N>` from a Claude
-Code chat:
+Leonard (the user) kicks off a session in one of two shapes:
 
+**Spec-from-scratch** (no issue yet):
+```
+Please run the dispatcher as the session lead for: <topic>.
+```
+The lead spins up the trio (designer, dev, test-author). The designer
+drafts the story spec collaboratively with dev and test-author
+flagging concerns as the draft evolves. When the trio agrees the spec
+is ready, the designer files the issue with `status:ready` and the
+dispatcher transitions the same trio (no re-spawn) into the
+implementation phase.
+
+**Existing-issue** (spec already filed):
 ```
 Please run the dispatcher as the session lead for issue #<N>.
 ```
-
 The lead's first actions:
 
 1. `gh issue view <N>` — load the spec.
@@ -47,10 +60,12 @@ The lead's first actions:
 4. Check dependencies — if any `depends-on: #DEP` is not CLOSED,
    post `session-lead: blocked on #<DEP>`, add `status:blocked`,
    end the session.
-5. Pick the team composition from the table above.
-6. Spin up the teammates with the issue body as shared context via
-   Agent Teams primitives. The shared task list is the primary
-   intra-session state.
+5. Spin up the trio (designer + dev + test-author) with the issue
+   body as shared context via Agent Teams primitives. The shared
+   task list is the primary intra-session state.
+6. Skip the spec phase. Go directly to implementation. The designer
+   is in the trio to answer design questions and amend the spec if
+   needed.
 
 ## Inter-agent communication protocol
 
@@ -61,19 +76,19 @@ few conventions:
   API surface before test-author commits tests. If they cannot
   converge in two rounds, either teammate signals the lead
   `<agent>: needs human — <reason>`.
-- **Design questions** — dev or test-author messages
-  gameplay-designer directly. Answer shape is exactly three
+- **Design questions** — dev or test-author messages the **designer**
+  directly. The designer is in the session as the final authority,
+  so there is no second-hop deferral. Answer shape is exactly three
   sentences: the answer, the precedent (which Civ title / which
   issue), the consistency check (does this contradict any decided
-  mechanic?). If gameplay-designer cannot answer from conventions
-  or prior work, it says so and tells the lead
-  `gameplay-designer: cannot answer from conventions; recommend
-  escalation to user.`
-- **Spec amendments** — if gameplay-designer believes the spec itself
-  should change, it tells the lead
-  `gameplay-designer: recommend spec amendment on issue #<N> —
-  <one-line change>`. The lead records this; the designer (outside
-  this session) picks it up. The team does not edit the issue body.
+  mechanic?). If the designer cannot answer from conventions, prior
+  work, or its own judgement, it says so and tells the lead
+  `designer: cannot answer; recommend escalation to user — <reason>.`
+- **Spec amendments** — if the designer concludes the spec itself
+  should change, the designer **edits the issue body in place**
+  (designer is the spec owner) and posts a comment summarizing the
+  amendment. The trio continues against the amended body
+  immediately — no separate session, no waiting.
 - **Blockers** — any teammate can signal the lead with
   `<agent>: needs human — <reason>` to escalate. The lead posts
   `session-lead: needs human — <reason>` on the issue and ends the
@@ -124,8 +139,8 @@ file for the full prompt. The handoff sequence is:
 
 The lead escalates in exactly four cases:
 
-1. `gameplay-designer: cannot answer from conventions; recommend
-   escalation to user.` appears in the shared task list.
+1. `designer: cannot answer; recommend escalation to user — <reason>.`
+   appears in the shared task list.
 2. The `blocked:bad-spec` label has been set and cleared twice on the
    same issue in this session.
 3. Dev reports `status:stuck` (iteration cap exhausted — 5 CI retry
