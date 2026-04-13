@@ -1,7 +1,7 @@
 using CivGame.Units;
 using CivGame.World;
 
-namespace CivGame.Rendering;
+namespace CivGame.Combat;
 
 /// <summary>
 /// Determines whether a unit can legally initiate a melee attack on a target coord.
