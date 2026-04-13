@@ -52,7 +52,7 @@ Use these labels consistently. Create any that don't yet exist via
 | `priority:low` | Polish / nice-to-have |
 | `status:ready` | Approved, dispatchable to dev |
 | `status:blocked` | Waiting on another issue |
-| `claimed-by:*` | Added by dev agent when starting work |
+| `status:in-progress` | Being worked on in an active session |
 
 For sub-issue relationships, add a line to the body:
 
@@ -119,13 +119,6 @@ godot --headless --quit-after 10 scenes/<scene>.tscn
 depends-on: #<N>
 ```
 
-## Shared file awareness
-
-When a story touches shared core files (e.g. `src/core/Game.cs`,
-`src/core/GameState.cs`), add a `touches:<path>` label. The dispatcher
-uses this to serialize issues that would otherwise conflict at merge
-time.
-
 ## Epic body template
 
 ```markdown
@@ -164,19 +157,6 @@ Run before adding `status:ready` to a story:
 - [ ] No open decisions ("pick one", "tbd")
 
 6/6 → `status:ready`. 5/6 → sharpen. ≤4/6 → rework.
-
-## Risk assessment
-
-Rate each story after the checklist:
-
-- Schema or save-format change → HIGH
-- Security/auth change → HIGH
-- Touches >3 files → MEDIUM
-- Changes existing tests → MEDIUM
-- Only content/config/docs → LOW
-
-HIGH-risk stories stay in `status:blocked` until Leonard reviews them
-manually.
 
 ## Parallelism rule
 
@@ -217,26 +197,12 @@ For bugs, create `type:bug` issues directly (no epic needed):
 {How we'll know it's fixed}
 ```
 
-## gh commands you'll use
+## Key gh commands
 
 ```bash
-# Create an epic
-gh issue create --title "[Epic] Feature name" --body-file /tmp/epic.md \
-  --label "type:epic,priority:high"
-
-# Create a story under an epic
-gh issue create --title "[Story] Concrete task" --body-file /tmp/story.md \
-  --label "type:story,track:map,priority:medium"
-
-# Link as sub-issue (GitHub CLI doesn't do this natively; use the body)
-
-# List parallelizable ready work
-gh issue list --label "status:ready" --state open --json number,title,labels
-
-# Mark ready
+gh issue create --title "[Epic] ..." --body-file /tmp/epic.md --label "type:epic,priority:high"
+gh issue create --title "[Story] ..." --body-file /tmp/story.md --label "type:story,track:X,priority:medium,status:ready"
 gh issue edit <N> --add-label "status:ready"
-
-# Close finished epic
 gh issue close <N> --comment "All stories merged."
 ```
 
