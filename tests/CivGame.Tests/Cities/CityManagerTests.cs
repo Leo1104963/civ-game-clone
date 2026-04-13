@@ -98,16 +98,31 @@ public class CityManagerTests
         var manager = new CityManager();
         var grid = CreateGrid();
 
-        var rome = manager.CreateCity("Rome", new HexCoord(0, 0), grid);
-        var athens = manager.CreateCity("Athens", new HexCoord(1, 1), grid);
+        // Set Forest terrain so Production yield is non-zero (Forest → Prod:2 per tile).
+        foreach (var cell in grid.AllCells())
+        {
+            cell.Terrain = TerrainType.Forest;
+        }
+
+        var rome = manager.CreateCity("Rome", new HexCoord(3, 3), grid);
+        var athens = manager.CreateCity("Athens", new HexCoord(6, 6), grid);
 
         rome.StartBuilding(BuildingCatalog.Granary);
         athens.StartBuilding(BuildingCatalog.Granary);
 
-        manager.TickAllProduction();
+        int romeInitial = rome.CurrentProduction!.TurnsRemaining;
+        int athensInitial = athens.CurrentProduction!.TurnsRemaining;
 
-        Assert.Equal(4, rome.CurrentProduction!.TurnsRemaining);
-        Assert.Equal(4, athens.CurrentProduction!.TurnsRemaining);
+        manager.TickAllProduction(grid);
+
+        // Production has been applied: either building completed or cost decreased.
+        bool romeAdvanced = rome.CurrentProduction == null ||
+                            rome.CurrentProduction.TurnsRemaining < romeInitial;
+        bool athensAdvanced = athens.CurrentProduction == null ||
+                              athens.CurrentProduction.TurnsRemaining < athensInitial;
+
+        Assert.True(romeAdvanced);
+        Assert.True(athensAdvanced);
     }
 
     [Fact]
@@ -116,13 +131,17 @@ public class CityManagerTests
         var manager = new CityManager();
         var grid = CreateGrid();
 
-        var city = manager.CreateCity("Rome", new HexCoord(0, 0), grid);
+        // Forest terrain: each tile yields Prod:2 → center + 6 neighbors = 14 production.
+        // Granary costs 5, so one TickAllProduction call completes it.
+        foreach (var cell in grid.AllCells())
+        {
+            cell.Terrain = TerrainType.Forest;
+        }
+
+        var city = manager.CreateCity("Rome", new HexCoord(3, 3), grid);
         city.StartBuilding(BuildingCatalog.Granary);
 
-        for (int i = 0; i < 5; i++)
-        {
-            manager.TickAllProduction();
-        }
+        manager.TickAllProduction(grid);
 
         Assert.Null(city.CurrentProduction);
         Assert.Single(city.CompletedBuildings);

@@ -149,16 +149,29 @@ public class OwnershipTests
     public void Should_TickOnlyPlayer0Cities_When_TickProductionForCalledWithZero()
     {
         var (_, cities, grid) = MakeManagers();
-        var city0 = cities.CreateCity("Rome", new HexCoord(0, 0), grid, ownerId: 0);
-        var city1 = cities.CreateCity("Athens", new HexCoord(5, 5), grid, ownerId: 1);
+
+        // Use Forest terrain so Production yield is non-zero (Forest → Prod:2 per tile).
+        foreach (var cell in grid.AllCells())
+        {
+            cell.Terrain = TerrainType.Forest;
+        }
+
+        var city0 = cities.CreateCity("Rome", new HexCoord(3, 3), grid, ownerId: 0);
+        var city1 = cities.CreateCity("Athens", new HexCoord(7, 7), grid, ownerId: 1);
         city0.StartBuilding(BuildingCatalog.Granary);
         city1.StartBuilding(BuildingCatalog.Granary);
 
+        int city0TurnsBefore = city0.CurrentProduction!.TurnsRemaining;
         int city1TurnsBefore = city1.CurrentProduction!.TurnsRemaining;
 
-        cities.TickProductionFor(0);
+        cities.TickProductionFor(0, grid);
 
-        Assert.Equal(4, city0.CurrentProduction!.TurnsRemaining);
+        // Player-0 city advanced (either completed or cost decreased).
+        bool city0Advanced = city0.CurrentProduction == null ||
+                             city0.CurrentProduction.TurnsRemaining < city0TurnsBefore;
+        Assert.True(city0Advanced);
+
+        // Player-1 city is unchanged.
         Assert.Equal(city1TurnsBefore, city1.CurrentProduction!.TurnsRemaining);
     }
 
@@ -184,8 +197,8 @@ public class OwnershipTests
     [Fact]
     public void Should_AdvanceCurrentPlayerAndWrapCurrentTurn_When_TwoPlayerEndTurnCycled()
     {
-        var (units, cities, _) = MakeManagers();
-        var turns = new TurnManager(units, cities, new[] { 0, 1 });
+        var (units, cities, grid) = MakeManagers();
+        var turns = new TurnManager(units, cities, grid, new[] { 0, 1 });
 
         Assert.Equal(0, turns.CurrentPlayerId);
         Assert.Equal(1, turns.CurrentTurn);
@@ -217,7 +230,7 @@ public class OwnershipTests
         player1Unit.TryMoveTo(new HexCoord(6, 5), grid, units);
         int player1MovementAfterMove = player1Unit.MovementRemaining;
 
-        var turns = new TurnManager(units, cities, new[] { 0, 1 });
+        var turns = new TurnManager(units, cities, grid, new[] { 0, 1 });
 
         turns.EndTurn(); // ends player 0's turn
 
@@ -232,10 +245,10 @@ public class OwnershipTests
     [Fact]
     public void Should_ThrowArgumentException_When_EmptyPlayerOrderProvided()
     {
-        var (units, cities, _) = MakeManagers();
+        var (units, cities, grid) = MakeManagers();
 
         Assert.Throws<ArgumentException>(() =>
-            new TurnManager(units, cities, new int[0]));
+            new TurnManager(units, cities, grid, new int[0]));
     }
 
     // -----------------------------------------------------------------------

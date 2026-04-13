@@ -91,7 +91,7 @@ public class CityTests
         // Complete the granary
         for (int i = 0; i < 5; i++)
         {
-            city.TickProduction();
+            city.TickProduction(1);
         }
 
         // Try to build another granary
@@ -106,7 +106,7 @@ public class CityTests
         var city = CreateCity();
         city.StartBuilding(BuildingCatalog.Granary);
 
-        city.TickProduction();
+        city.TickProduction(1);
 
         Assert.Equal(4, city.CurrentProduction!.TurnsRemaining);
     }
@@ -119,7 +119,7 @@ public class CityTests
 
         for (int i = 0; i < 5; i++)
         {
-            city.TickProduction();
+            city.TickProduction(1);
         }
 
         Assert.Null(city.CurrentProduction);
@@ -132,7 +132,7 @@ public class CityTests
     {
         var city = CreateCity();
 
-        city.TickProduction(); // should not throw
+        city.TickProduction(1); // should not throw
 
         Assert.Null(city.CurrentProduction);
         Assert.Empty(city.CompletedBuildings);
@@ -155,7 +155,7 @@ public class CityTests
 
         for (int i = 0; i < 5; i++)
         {
-            city.TickProduction();
+            city.TickProduction(1);
         }
 
         Assert.True(city.HasBuilding("Granary"));
@@ -187,11 +187,11 @@ public class CityTests
 
         for (int i = 0; i < 4; i++)
         {
-            city.TickProduction();
+            city.TickProduction(1);
             Assert.NotNull(city.CurrentProduction);
         }
 
-        city.TickProduction(); // 5th tick
+        city.TickProduction(1); // 5th tick
         Assert.Null(city.CurrentProduction);
         Assert.Single(city.CompletedBuildings);
     }

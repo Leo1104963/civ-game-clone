@@ -59,16 +59,27 @@ public sealed class City
     /// Tick production: reduce current build item cost by 1.
     /// If complete, move to completed buildings list and clear current production.
     /// </summary>
-    public void TickProduction()
+    public void TickProduction() => TickProduction(1);
+
+    /// <summary>
+    /// Apply <paramref name="productionYield"/> production points this turn.
+    /// Each point reduces remaining cost by 1. If the building completes mid-loop,
+    /// any remaining production is discarded (carry-over is out of scope).
+    /// </summary>
+    public void TickProduction(int productionYield)
     {
         if (CurrentProduction is null) return;
+        if (productionYield <= 0) return;
 
-        CurrentProduction.Tick();
-
-        if (CurrentProduction.IsComplete)
+        for (int i = 0; i < productionYield; i++)
         {
-            _completedBuildings.Add(CurrentProduction.Definition);
-            CurrentProduction = null;
+            CurrentProduction.Tick();
+            if (CurrentProduction.IsComplete)
+            {
+                _completedBuildings.Add(CurrentProduction.Definition);
+                CurrentProduction = null;
+                return;
+            }
         }
     }
 }

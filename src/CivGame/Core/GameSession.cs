@@ -42,7 +42,7 @@ public sealed class GameSession
         Grid = MapGenerator.Generate(gridWidth, gridHeight, seed);
         Units = new UnitManager();
         Cities = new CityManager();
-        Turns = new TurnManager(Units, Cities);
+        Turns = new TurnManager(Units, Cities, Grid);
 
         // Place city at grid center (MapGenerator guarantees this is Grass).
         var cityCoord = new HexCoord(gridWidth / 2, gridHeight / 2);

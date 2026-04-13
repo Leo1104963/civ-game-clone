@@ -246,7 +246,7 @@ public class TurnHudCityInfoBootstrapTests
         var city = CreateCity();
         city.StartBuilding(BuildingCatalog.Granary);
         // Tick 5 times to complete
-        for (int i = 0; i < 5; i++) city.TickProduction();
+        for (int i = 0; i < 5; i++) city.TickProduction(1);
 
         bool shouldShowButton = city.CurrentProduction is null && !city.HasBuilding("Granary");
         Assert.False(shouldShowButton);
@@ -267,7 +267,7 @@ public class TurnHudCityInfoBootstrapTests
     {
         var city = CreateCity();
         city.StartBuilding(BuildingCatalog.Granary);
-        for (int i = 0; i < 5; i++) city.TickProduction();
+        for (int i = 0; i < 5; i++) city.TickProduction(1);
 
         string label = city.CompletedBuildings.Count > 0
             ? "Buildings: " + string.Join(", ", city.CompletedBuildings.Select(b => b.Name))
@@ -529,7 +529,7 @@ public class TurnHudCityInfoBootstrapTests
     {
         var city = CreateCity();
         city.StartBuilding(BuildingCatalog.Granary);
-        for (int i = 0; i < 5; i++) city.TickProduction();
+        for (int i = 0; i < 5; i++) city.TickProduction(1);
 
         bool started = city.StartBuilding(BuildingCatalog.Granary);
         Assert.False(started);
