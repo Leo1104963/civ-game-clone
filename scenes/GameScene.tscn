@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://src/CivGame/Rendering/GameController.cs" id="1"]
 [ext_resource type="Script" path="res://src/CivGame/Rendering/HexGridRenderer.cs" id="2"]
@@ -9,6 +9,7 @@
 [ext_resource type="Script" path="res://src/CivGame/Rendering/TurnHud.cs" id="7"]
 [ext_resource type="Script" path="res://src/CivGame/Rendering/CityInfoPanel.cs" id="8"]
 [ext_resource type="Script" path="res://src/CivGame/Rendering/SelectedUnitPanel.cs" id="9"]
+[ext_resource type="Script" path="res://src/CivGame/Rendering/TechTreeScreen.cs" id="10"]
 
 [node name="GameScene" type="Node2D"]
 script = ExtResource("1")
@@ -52,6 +53,20 @@ offset_top = 35.0
 offset_right = 200.0
 offset_bottom = 70.0
 text = "End Turn"
+
+[node name="ScienceLabel" type="Label" parent="CanvasLayer/TurnHud"]
+layout_mode = 0
+offset_top = 75.0
+offset_right = 200.0
+offset_bottom = 105.0
+text = "Science: 0"
+
+[node name="ResearchButton" type="Button" parent="CanvasLayer/TurnHud"]
+layout_mode = 0
+offset_top = 110.0
+offset_right = 200.0
+offset_bottom = 145.0
+text = "Research"
 
 [node name="CityInfoPanel" type="Control" parent="CanvasLayer"]
 script = ExtResource("8")
@@ -122,3 +137,38 @@ offset_top = 100.0
 offset_right = 250.0
 offset_bottom = 135.0
 text = "Found City"
+
+[node name="TechTreeScreen" type="Control" parent="CanvasLayer"]
+script = ExtResource("10")
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="CurrentResearchLabel" type="Label" parent="CanvasLayer/TechTreeScreen"]
+layout_mode = 0
+offset_right = 400.0
+offset_bottom = 30.0
+
+[node name="ScienceRateLabel" type="Label" parent="CanvasLayer/TechTreeScreen"]
+layout_mode = 0
+offset_top = 35.0
+offset_right = 400.0
+offset_bottom = 65.0
+
+[node name="CloseButton" type="Button" parent="CanvasLayer/TechTreeScreen"]
+layout_mode = 0
+offset_top = 70.0
+offset_right = 100.0
+offset_bottom = 105.0
+text = "Close"
+
+[node name="ScrollContainer" type="ScrollContainer" parent="CanvasLayer/TechTreeScreen"]
+layout_mode = 0
+offset_top = 110.0
+offset_right = 600.0
+offset_bottom = 500.0
+
+[node name="TechList" type="VBoxContainer" parent="CanvasLayer/TechTreeScreen/ScrollContainer"]
+layout_mode = 2
