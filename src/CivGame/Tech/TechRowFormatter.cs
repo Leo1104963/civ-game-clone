@@ -38,7 +38,7 @@ public static class TechRowFormatter
         {
             int accumulated = research.GetAccumulatedScience(playerId);
             string turnsText = sciencePerTurn <= 0
-                ? "paused"
+                ? "? turns"
                 : CeilTurns(tech.ScienceCost - accumulated, sciencePerTurn) + " turns";
             return new Row(tech.Id, tech.Name, TechRowState.InProgress,
                 $"{accumulated}/{tech.ScienceCost} beakers — {turnsText}");
@@ -51,14 +51,16 @@ public static class TechRowFormatter
 
         if (missingPrereqs.Count == 0)
         {
-            string detail = $"Cost: {tech.ScienceCost} beakers";
+            string detail = sciencePerTurn > 0
+                ? $"{tech.ScienceCost} beakers — {CeilTurns(tech.ScienceCost, sciencePerTurn)} turns"
+                : $"{tech.ScienceCost} beakers";
             return new Row(tech.Id, tech.Name, TechRowState.Researchable, detail);
         }
 
         var missingNames = missingPrereqs
             .Select(id => TechCatalog.GetById(id)?.Name ?? id);
         return new Row(tech.Id, tech.Name, TechRowState.Locked,
-            $"Locked: Requires {string.Join(", ", missingNames)}");
+            $"Requires {string.Join(", ", missingNames)}");
     }
 
     private static int CeilTurns(int remaining, int sciencePerTurn)
