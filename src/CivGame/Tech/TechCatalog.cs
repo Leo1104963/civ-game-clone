@@ -10,29 +10,52 @@ public static class TechCatalog
     // ------------------------------------------------------------------ //
 
     public static Technology Pottery { get; } = new(
-        "pottery", "Pottery", 20, unlocks: new[] { "Granary" });
+        "pottery", "Pottery", 20, unlocks: new[] { "building:Granary" });
 
     public static Technology BronzeWorking { get; } = new(
-        "bronze-working", "Bronze Working", 25, unlocks: new[] { "Spearman" });
+        "bronze-working", "Bronze Working", 25, unlocks: new[] { "unit:Spearman" });
 
     public static Technology Writing { get; } = new(
-        "writing", "Writing", 30, unlocks: new[] { "Library" });
+        "writing", "Writing", 30, unlocks: new[] { "building:Library" });
 
     public static Technology Masonry { get; } = new(
-        "masonry", "Masonry", 30, unlocks: new[] { "Walls" });
+        "masonry", "Masonry", 30, unlocks: new[] { "building:Walls" });
 
     public static Technology Archery { get; } = new(
-        "archery", "Archery", 25, unlocks: new[] { "Archer" });
+        "archery", "Archery", 25, unlocks: new[] { "unit:Archer" });
 
     public static Technology Currency { get; } = new(
         "currency", "Currency", 40,
         prerequisites: new[] { "bronze-working" },
-        unlocks: new[] { "Market" });
+        unlocks: new[] { "building:Market" });
 
     public static Technology Mathematics { get; } = new(
         "mathematics", "Mathematics", 50,
         prerequisites: new[] { "currency", "masonry" },
-        unlocks: new[] { "Catapult" });
+        unlocks: new[] { "unit:Catapult" });
+
+    public static Technology HorsebackRiding { get; } = new(
+        "horseback-riding", "Horseback Riding", 35, unlocks: new[] { "unit:Horseman" });
+
+    public static Technology Philosophy { get; } = new(
+        "philosophy", "Philosophy", 40,
+        prerequisites: new[] { "writing" },
+        unlocks: new[] { "building:Temple" });
+
+    public static Technology Construction { get; } = new(
+        "construction", "Construction", 45,
+        prerequisites: new[] { "masonry" },
+        unlocks: new[] { "building:Aqueduct" });
+
+    public static Technology Calendar { get; } = new(
+        "calendar", "Calendar", 35,
+        prerequisites: new[] { "pottery" },
+        unlocks: new[] { "building:Monument" });
+
+    public static Technology IronWorking { get; } = new(
+        "iron-working", "Iron Working", 45,
+        prerequisites: new[] { "bronze-working" },
+        unlocks: new[] { "unit:Swordsman" });
 
     // ------------------------------------------------------------------ //
     // AllTechs                                                            //
@@ -47,6 +70,11 @@ public static class TechCatalog
         Archery,
         Currency,
         Mathematics,
+        HorsebackRiding,
+        Philosophy,
+        Construction,
+        Calendar,
+        IronWorking,
     };
 
     // ------------------------------------------------------------------ //

@@ -1,5 +1,6 @@
 using CivGame.Cities;
 using CivGame.Combat;
+using CivGame.Tech;
 using CivGame.World;
 
 namespace CivGame.Units;
@@ -36,6 +37,7 @@ public sealed class UnitManager
         {
             "Warrior" => 2,
             "Settler" => 2,
+            "Horseman" => 3,
             _ => throw new ArgumentException($"Unknown unit type: {unitType}"),
         };
 
@@ -43,6 +45,34 @@ public sealed class UnitManager
         _units.Add(unit);
         _positionIndex[position] = unit;
         return unit;
+    }
+
+    /// <summary>
+    /// Tech-aware unit spawn. Checks the tech gate first (when <paramref name="unlocks"/> is
+    /// non-null), then delegates to <see cref="CreateUnit"/>.
+    /// Returns a locked result when the unit type is gated and not yet researched.
+    /// Throws for invalid input (bad position, occupied cell, unknown unit type) — matching
+    /// CreateUnit behaviour.
+    /// </summary>
+    public UnitSpawnResult TrySpawnUnit(
+        string unitType,
+        HexCoord position,
+        HexGrid grid,
+        int ownerId,
+        TechUnlockService? unlocks)
+    {
+        if (unlocks is not null)
+        {
+            var tag = $"unit:{unitType}";
+            if (!unlocks.IsUnlocked(ownerId, tag))
+            {
+                var techName = unlocks.GatingTechName(tag) ?? "unknown tech";
+                return new UnitSpawnResult(null, $"Requires {techName}");
+            }
+        }
+
+        var unit = CreateUnit(unitType, position, grid, ownerId);
+        return new UnitSpawnResult(unit, null);
     }
 
     /// <summary>Returns all units owned by the given player.</summary>
