@@ -30,4 +30,12 @@ public static class HexColorMapper
     {
         return (0.2f, 0.5f, 0.15f);
     }
+
+    /// <summary>
+    /// Multiplies each channel by <paramref name="factor"/>. Pure helper, no Godot dependency.
+    /// </summary>
+    public static (float R, float G, float B) Dim((float R, float G, float B) color, float factor)
+    {
+        return (color.R * factor, color.G * factor, color.B * factor);
+    }
 }

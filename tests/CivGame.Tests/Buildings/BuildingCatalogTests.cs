@@ -51,4 +51,28 @@ public class BuildingCatalogTests
 
         Assert.Same(first, second);
     }
+
+    [Fact]
+    public void Should_ReturnLibraryDefinition_When_AccessingLibraryProperty()
+    {
+        var library = BuildingCatalog.Library;
+
+        Assert.NotNull(library);
+        Assert.Equal("Library", library.Name);
+        Assert.Equal(8, library.BuildCost);
+        Assert.Equal(2, library.ScienceYield);
+    }
+
+    [Theory]
+    [InlineData("library")]
+    [InlineData("LIBRARY")]
+    [InlineData("Library")]
+    public void Should_ReturnLibrary_When_LookingUpCaseInsensitive(string name)
+    {
+        var result = BuildingCatalog.GetByName(name);
+
+        Assert.NotNull(result);
+        Assert.Equal("Library", result!.Name);
+        Assert.Equal(2, result.ScienceYield);
+    }
 }

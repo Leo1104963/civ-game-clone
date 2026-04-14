@@ -1,5 +1,6 @@
 using CivGame.Ai;
 using CivGame.Cities;
+using CivGame.Tech;
 using CivGame.Units;
 using CivGame.World;
 
@@ -17,10 +18,12 @@ public sealed class GameSession
     public CityManager Cities { get; }
     public TurnManager Turns { get; }
     public VisibilityMap Visibility { get; }
+    public ResearchManager Research { get; }
 
     /// <summary>
     /// Create a fully custom game session (for testing or advanced setup).
     /// Visibility is constructed but NOT auto-recomputed; caller owns setup.
+    /// Research is initialized but not started and not wired into TurnManager.
     /// </summary>
     public GameSession(HexGrid grid, UnitManager units, CityManager cities, TurnManager turns)
     {
@@ -28,6 +31,27 @@ public sealed class GameSession
         Units = units ?? throw new ArgumentNullException(nameof(units));
         Cities = cities ?? throw new ArgumentNullException(nameof(cities));
         Turns = turns ?? throw new ArgumentNullException(nameof(turns));
+        Visibility = new VisibilityMap(grid);
+        Research = new ResearchManager();
+        Turns.TurnEnded += _ => Visibility.RecomputeForPlayer(Turns.CurrentPlayerId, Units, Cities);
+    }
+
+    /// <summary>
+    /// Create a fully custom game session with an explicit ResearchManager.
+    /// Visibility is constructed but NOT auto-recomputed; caller owns setup.
+    /// </summary>
+    public GameSession(
+        HexGrid grid,
+        UnitManager units,
+        CityManager cities,
+        TurnManager turns,
+        ResearchManager research)
+    {
+        Grid = grid ?? throw new ArgumentNullException(nameof(grid));
+        Units = units ?? throw new ArgumentNullException(nameof(units));
+        Cities = cities ?? throw new ArgumentNullException(nameof(cities));
+        Turns = turns ?? throw new ArgumentNullException(nameof(turns));
+        Research = research ?? throw new ArgumentNullException(nameof(research));
         Visibility = new VisibilityMap(grid);
         Turns.TurnEnded += _ => Visibility.RecomputeForPlayer(Turns.CurrentPlayerId, Units, Cities);
     }
@@ -40,6 +64,8 @@ public sealed class GameSession
     /// - One Settler on a different passable neighbor of the capital
     /// - PlayerOrder [0, 1]; barbarian AI runs on player 1's TurnEnding,
     ///   barbarian spawning runs on TurnEnded when CurrentPlayerId advances to 0.
+    /// - ResearchManager is wired into TurnManager (science ticked each EndTurn).
+    ///   No research is started by default.
     /// </summary>
     public GameSession(int gridWidth, int gridHeight, int seed = DefaultSeed)
     {
@@ -49,7 +75,8 @@ public sealed class GameSession
         Grid = MapGenerator.Generate(gridWidth, gridHeight, seed);
         Units = new UnitManager();
         Cities = new CityManager();
-        Turns = new TurnManager(Units, Cities, Grid, new[] { 0, 1 });
+        Research = new ResearchManager();
+        Turns = new TurnManager(Units, Cities, Grid, Research, new[] { 0, 1 });
 
         var barbarianRng = new Random(seed ^ 0x5A5A5A5A);
 

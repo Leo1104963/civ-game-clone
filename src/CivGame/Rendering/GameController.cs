@@ -15,6 +15,9 @@ public partial class GameController : Node2D
 
     [Export] public int GridWidth { get; set; } = 10;
     [Export] public int GridHeight { get; set; } = 8;
+    [Export] public bool FogOfWarEnabled { get; set; } = true;
+
+    private const int ViewerOwnerId = 0;
 
     public override void _Ready()
     {
@@ -32,10 +35,11 @@ public partial class GameController : Node2D
 
         // Initialize renderers
         float hexSize = gridRenderer.HexSize;
-        gridRenderer.Initialize(_session.Grid);
-        unitRenderer.Initialize(_session.Units, _session.Grid, hexSize);
-        cityRenderer.Initialize(_session.Cities, _session.Grid, hexSize);
-        inputHandler.Initialize(_session, gridRenderer, unitRenderer, movementOverlay);
+        gridRenderer.FogOfWarEnabled = FogOfWarEnabled;
+        gridRenderer.Initialize(_session.Grid, _session.Visibility, ViewerOwnerId);
+        unitRenderer.Initialize(_session.Units, _session.Grid, hexSize, _session.Visibility, ViewerOwnerId);
+        cityRenderer.Initialize(_session.Cities, _session.Grid, hexSize, _session.Visibility, ViewerOwnerId);
+        inputHandler.Initialize(_session, gridRenderer, unitRenderer, movementOverlay, _session.Visibility, ViewerOwnerId);
         turnHud.Initialize(_session.Turns);
 
         // Initial draw
@@ -99,9 +103,10 @@ public partial class GameController : Node2D
             }
         };
 
-        // Connect turn end to refresh
+        // Connect turn end to refresh (visibility already recomputed by GameSession.TurnEnded handler)
         _session.Turns.TurnEnded += (newTurn) =>
         {
+            gridRenderer.QueueRedraw();
             unitRenderer.Refresh();
             cityRenderer.Refresh();
             turnHud.UpdateTurnDisplay(newTurn);
