@@ -1,4 +1,5 @@
 using CivGame.Buildings;
+using CivGame.Tech;
 using CivGame.World;
 
 namespace CivGame.Cities;
@@ -54,15 +55,43 @@ public sealed class City
 
     /// <summary>
     /// Start building. Returns false if already building something or building already completed.
+    /// Tech gating is not checked; use TryStartBuilding for tech-aware production.
     /// </summary>
-    public bool StartBuilding(BuildingDefinition building)
+    public bool StartBuilding(BuildingDefinition building) =>
+        TryStartBuilding(building, null, 0).Success;
+
+    /// <summary>
+    /// Attempt to start building with optional tech-unlock enforcement.
+    /// Check order: (1) already producing, (2) already built, (3) tech gate.
+    /// When <paramref name="unlocks"/> is null, the tech gate is skipped.
+    /// LockedReason values: "Already producing", "Already built", "Requires {TechName}".
+    /// </summary>
+    public BuildResult TryStartBuilding(
+        BuildingDefinition building,
+        TechUnlockService? unlocks,
+        int playerId)
     {
         if (building is null) throw new ArgumentNullException(nameof(building));
-        if (CurrentProduction is not null) return false;
-        if (HasBuilding(building.Name)) return false;
+
+        if (CurrentProduction is not null)
+            return new BuildResult(false, "Already producing");
+
+        if (_completedBuildings.Any(b =>
+                string.Equals(b.Name, building.Name, StringComparison.OrdinalIgnoreCase)))
+            return new BuildResult(false, "Already built");
+
+        if (unlocks is not null)
+        {
+            var tag = $"building:{building.Name}";
+            if (!unlocks.IsUnlocked(playerId, tag))
+            {
+                var techName = unlocks.GatingTechName(tag) ?? "unknown tech";
+                return new BuildResult(false, $"Requires {techName}");
+            }
+        }
 
         CurrentProduction = new BuildQueueItem(building);
-        return true;
+        return new BuildResult(true, null);
     }
 
     /// <summary>
