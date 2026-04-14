@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using CivGame.Tech;
 
 namespace CivGame.Tech.Tests;
@@ -14,9 +15,9 @@ public class TechCatalogTests
     // ------------------------------------------------------------------ //
 
     [Fact]
-    public void Should_ContainSevenTechs_When_CatalogLoaded()
+    public void Should_ContainTwelveTechs_When_CatalogLoaded()
     {
-        Assert.Equal(7, TechCatalog.AllTechs.Count);
+        Assert.Equal(12, TechCatalog.AllTechs.Count);
     }
 
     // ------------------------------------------------------------------ //
@@ -40,6 +41,11 @@ public class TechCatalogTests
     [InlineData("currency")]
     [InlineData("archery")]
     [InlineData("mathematics")]
+    [InlineData("horseback-riding")]
+    [InlineData("philosophy")]
+    [InlineData("construction")]
+    [InlineData("calendar")]
+    [InlineData("iron-working")]
     public void Should_ReturnNonNullTech_When_GetByIdCalledWithKnownId(string id)
     {
         var tech = TechCatalog.GetById(id);
@@ -140,6 +146,65 @@ public class TechCatalogTests
 
         Assert.NotNull(tech);
         Assert.Empty(tech!.Prerequisites);
+    }
+
+    // ------------------------------------------------------------------ //
+    // New techs — prerequisites and unlock tags (issue #99)               //
+    // ------------------------------------------------------------------ //
+
+    [Theory]
+    [InlineData("philosophy", "writing")]
+    [InlineData("construction", "masonry")]
+    [InlineData("calendar", "pottery")]
+    [InlineData("iron-working", "bronze-working")]
+    public void Should_HaveCorrectPrerequisite_When_NewTechInspected(string techId, string expectedPrereq)
+    {
+        var tech = TechCatalog.GetById(techId);
+
+        Assert.NotNull(tech);
+        Assert.Contains(expectedPrereq, tech!.Prerequisites);
+    }
+
+    [Fact]
+    public void Should_HaveNoPrerequisites_When_HorsebackRidingInspected()
+    {
+        var tech = TechCatalog.GetById("horseback-riding");
+
+        Assert.NotNull(tech);
+        Assert.Empty(tech!.Prerequisites);
+    }
+
+    [Theory]
+    [InlineData("horseback-riding", "unit:Horseman")]
+    [InlineData("philosophy", "building:Temple")]
+    [InlineData("construction", "building:Aqueduct")]
+    [InlineData("calendar", "building:Monument")]
+    [InlineData("iron-working", "unit:Swordsman")]
+    public void Should_HaveTaggedUnlock_When_NewTechInspected(string techId, string expectedTag)
+    {
+        var tech = TechCatalog.GetById(techId);
+
+        Assert.NotNull(tech);
+        Assert.Contains(expectedTag, tech!.Unlocks);
+    }
+
+    // ------------------------------------------------------------------ //
+    // All unlock tags use tagged scheme (issue #99)                       //
+    // ------------------------------------------------------------------ //
+
+    [Fact]
+    public void Should_HaveAllUnlockTagsMatchTaggedSchemeRegex_When_CatalogInspected()
+    {
+        var regex = new Regex(@"^(unit|building):[A-Za-z][A-Za-z0-9]*$");
+
+        foreach (var tech in TechCatalog.AllTechs)
+        {
+            foreach (var tag in tech.Unlocks)
+            {
+                Assert.True(regex.IsMatch(tag),
+                    $"Tech '{tech.Id}' has unlock tag '{tag}' that does not match the tagged scheme.");
+            }
+        }
     }
 
     // ------------------------------------------------------------------ //
