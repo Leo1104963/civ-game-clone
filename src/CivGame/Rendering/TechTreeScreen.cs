@@ -22,6 +22,19 @@ public partial class TechTreeScreen : Control
     private Label? _scienceRateLabel;
     private VBoxContainer? _techList;
 
+    public override void _Ready()
+    {
+        _currentResearchLabel = GetNodeOrNull<Label>("CurrentResearchLabel");
+        _scienceRateLabel = GetNodeOrNull<Label>("ScienceRateLabel");
+        _techList = GetNodeOrNull<VBoxContainer>("ScrollContainer/TechList");
+
+        var closeButton = GetNodeOrNull<Button>("CloseButton");
+        if (closeButton is not null)
+            closeButton.Pressed += OnClosePressed;
+
+        Visible = false;
+    }
+
     /// <summary>
     /// Called once by GameController after scene load.
     /// </summary>
@@ -35,15 +48,6 @@ public partial class TechTreeScreen : Control
         _unlocks = unlocks ?? throw new ArgumentNullException(nameof(unlocks));
         _playerId = playerId;
         _sciencePerTurnSource = sciencePerTurnSource ?? throw new ArgumentNullException(nameof(sciencePerTurnSource));
-
-        _currentResearchLabel = GetNode<Label>("CurrentResearchLabel");
-        _scienceRateLabel = GetNode<Label>("ScienceRateLabel");
-        _techList = GetNode<VBoxContainer>("ScrollContainer/TechList");
-
-        var closeButton = GetNode<Button>("CloseButton");
-        closeButton.Pressed += OnClosePressed;
-
-        Visible = false;
     }
 
     /// <summary>
