@@ -98,11 +98,11 @@ public class TechRowFormatterTests
     }
 
     // ------------------------------------------------------------------ //
-    // InProgress state — zero sciencePerTurn (paused)                    //
+    // InProgress state — zero/negative sciencePerTurn (unknown ETA)      //
     // ------------------------------------------------------------------ //
 
     [Fact]
-    public void Should_ReturnPausedDetailText_When_WritingInProgressAndSciencePerTurnIsZero()
+    public void Should_ReturnUnknownTurnsDetailText_When_WritingInProgressAndSciencePerTurnIsZero()
     {
         var research = CreateFreshResearch();
         research.StartResearch(PlayerId, "writing");
@@ -111,11 +111,11 @@ public class TechRowFormatterTests
 
         var row = TechRowFormatter.Format(writing, research, PlayerId, 0);
 
-        Assert.Equal("12/30 beakers — paused", row.DetailText);
+        Assert.Equal("12/30 beakers — ? turns", row.DetailText);
     }
 
     [Fact]
-    public void Should_ReturnPausedDetailText_When_WritingInProgressAndSciencePerTurnIsNegative()
+    public void Should_ReturnUnknownTurnsDetailText_When_WritingInProgressAndSciencePerTurnIsNegative()
     {
         var research = CreateFreshResearch();
         research.StartResearch(PlayerId, "writing");
@@ -124,7 +124,7 @@ public class TechRowFormatterTests
 
         var row = TechRowFormatter.Format(writing, research, PlayerId, -1);
 
-        Assert.Equal("12/30 beakers — paused", row.DetailText);
+        Assert.Equal("12/30 beakers — ? turns", row.DetailText);
     }
 
     // ------------------------------------------------------------------ //
@@ -175,14 +175,16 @@ public class TechRowFormatterTests
     }
 
     [Fact]
-    public void Should_ReturnCostDetailText_When_PotteryResearchable()
+    public void Should_ReturnBeakersAndTurnsDetailText_When_PotteryResearchableWithPositiveSpt()
     {
+        // Researchable format: "{cost} beakers — {turns} turns" when spt > 0
+        // ceil(20/5) = 4
         var research = CreateFreshResearch();
         var pottery = TechCatalog.GetById("pottery")!;
 
         var row = TechRowFormatter.Format(pottery, research, PlayerId, 5);
 
-        Assert.Equal("Cost: 20 beakers", row.DetailText);
+        Assert.Equal("20 beakers — 4 turns", row.DetailText);
     }
 
     [Fact]
@@ -198,15 +200,17 @@ public class TechRowFormatterTests
     }
 
     [Fact]
-    public void Should_ReturnCostDetailText_When_CurrencyResearchable()
+    public void Should_ReturnBeakersAndTurnsDetailText_When_CurrencyResearchableWithPositiveSpt()
     {
+        // Researchable format: "{cost} beakers — {turns} turns" when spt > 0
+        // ceil(40/5) = 8
         var research = CreateFreshResearch();
         CompleteResearch(research, PlayerId, "bronze-working");
         var currency = TechCatalog.GetById("currency")!;
 
         var row = TechRowFormatter.Format(currency, research, PlayerId, 5);
 
-        Assert.Equal("Cost: 40 beakers", row.DetailText);
+        Assert.Equal("40 beakers — 8 turns", row.DetailText);
     }
 
     // ------------------------------------------------------------------ //
@@ -232,7 +236,7 @@ public class TechRowFormatterTests
 
         var row = TechRowFormatter.Format(currency, research, PlayerId, 5);
 
-        Assert.Equal("Locked: Requires Bronze Working", row.DetailText);
+        Assert.Equal("Requires Bronze Working", row.DetailText);
     }
 
     // ------------------------------------------------------------------ //
@@ -243,21 +247,21 @@ public class TechRowFormatterTests
     public void Should_ReturnLockedWithBothPrereqs_When_MathematicsFreshResearchManager()
     {
         // Mathematics prereqs in declaration order: ["currency", "masonry"]
-        // Both missing → "Locked: Requires Currency, Masonry"
+        // Both missing → "Requires Currency, Masonry"
         var research = CreateFreshResearch();
         var mathematics = TechCatalog.GetById("mathematics")!;
 
         var row = TechRowFormatter.Format(mathematics, research, PlayerId, 5);
 
         Assert.Equal(TechRowFormatter.TechRowState.Locked, row.State);
-        Assert.Equal("Locked: Requires Currency, Masonry", row.DetailText);
+        Assert.Equal("Requires Currency, Masonry", row.DetailText);
     }
 
     [Fact]
     public void Should_ReturnLockedWithOnlyMissingPrereq_When_MathematicsOnlyCurrencyCompleted()
     {
         // Currency is completed; masonry is still missing.
-        // Missing prereqs = ["masonry"] → "Locked: Requires Masonry"
+        // Missing prereqs = ["masonry"] → "Requires Masonry"
         var research = CreateFreshResearch();
         CompleteResearch(research, PlayerId, "bronze-working");
         CompleteResearch(research, PlayerId, "currency");
@@ -266,7 +270,7 @@ public class TechRowFormatterTests
         var row = TechRowFormatter.Format(mathematics, research, PlayerId, 5);
 
         Assert.Equal(TechRowFormatter.TechRowState.Locked, row.State);
-        Assert.Equal("Locked: Requires Masonry", row.DetailText);
+        Assert.Equal("Requires Masonry", row.DetailText);
     }
 
     // ------------------------------------------------------------------ //
