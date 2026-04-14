@@ -1,6 +1,7 @@
 using Godot;
 using CivGame.Core;
 using CivGame.Buildings;
+using CivGame.Tech;
 using CivGame.World;
 
 namespace CivGame.Rendering;
@@ -23,6 +24,10 @@ public partial class GameController : Node2D
     {
         _session = new GameSession(GridWidth, GridHeight);
 
+        // Build TechUnlockService for this session
+        var unlockService = new TechUnlockService(_session.Research);
+        Func<int> scienceSource = () => _session.Cities.CalculateScienceFor(ViewerOwnerId, _session.Grid);
+
         // Get child nodes
         var gridRenderer = GetNode<HexGridRenderer>("HexGridRenderer");
         var unitRenderer = GetNode<UnitRendererNode>("UnitRenderer");
@@ -32,6 +37,7 @@ public partial class GameController : Node2D
         var turnHud = GetNode<TurnHud>("CanvasLayer/TurnHud");
         var cityInfoPanel = GetNode<CityInfoPanel>("CanvasLayer/CityInfoPanel");
         var selectedUnitPanel = GetNode<SelectedUnitPanel>("CanvasLayer/SelectedUnitPanel");
+        var techTreeScreen = GetNode<TechTreeScreen>("CanvasLayer/TechTreeScreen");
 
         // Initialize renderers
         float hexSize = gridRenderer.HexSize;
@@ -40,7 +46,8 @@ public partial class GameController : Node2D
         unitRenderer.Initialize(_session.Units, _session.Grid, hexSize, _session.Visibility, ViewerOwnerId);
         cityRenderer.Initialize(_session.Cities, _session.Grid, hexSize, _session.Visibility, ViewerOwnerId);
         inputHandler.Initialize(_session, gridRenderer, unitRenderer, movementOverlay, _session.Visibility, ViewerOwnerId);
-        turnHud.Initialize(_session.Turns);
+        turnHud.Initialize(_session.Turns, _session.Research, scienceSource, ViewerOwnerId);
+        techTreeScreen.Initialize(_session.Research, unlockService, ViewerOwnerId, scienceSource);
 
         // Initial draw
         unitRenderer.Refresh();
@@ -103,6 +110,20 @@ public partial class GameController : Node2D
             }
         };
 
+        // Connect Research button → show tech screen
+        turnHud.ResearchPressed += () => techTreeScreen.ShowScreen();
+
+        // Connect tech selected → start research + refresh
+        techTreeScreen.ResearchSelected += (techId) =>
+        {
+            _session.Research.StartResearch(ViewerOwnerId, techId);
+            techTreeScreen.Refresh();
+            turnHud.RefreshScience();
+        };
+
+        // Connect tech screen closed → nothing extra needed
+        techTreeScreen.Closed += () => { };
+
         // Connect turn end to refresh (visibility already recomputed by GameSession.TurnEnded handler)
         _session.Turns.TurnEnded += (newTurn) =>
         {
@@ -110,6 +131,8 @@ public partial class GameController : Node2D
             unitRenderer.Refresh();
             cityRenderer.Refresh();
             turnHud.UpdateTurnDisplay(newTurn);
+            turnHud.RefreshScience();
+            techTreeScreen.Refresh();
         };
     }
 }
